@@ -3,6 +3,8 @@
    Loaded only on event-detail.html.
    ========================================================= */
 
+/* Replace with your Paystack *test* public key from https://dashboard.paystack.com/#/settings/developer
+   Paid checkout will not open until this is a real pk_test_... key. See README.md. */
 const PAYSTACK_PUBLIC_KEY = 'pk_test_PASTE_YOUR_OWN_TEST_KEY_HERE';
 
 const params = new URLSearchParams(window.location.search);
@@ -145,6 +147,20 @@ function updatePriceDisplay() {
 if (qtyMinus) qtyMinus.addEventListener('click', () => { if (qty > 1) { qty--; qtyValue.textContent = qty; updatePriceDisplay(); } });
 if (qtyPlus) qtyPlus.addEventListener('click', () => { if (qty < 6) { qty++; qtyValue.textContent = qty; updatePriceDisplay(); } });
 
+function openCheckoutOrRegister() {
+  qty = 1;
+  qtyValue.textContent = qty;
+  document.getElementById('orderEventName').textContent = currentEvent.title;
+  document.getElementById('orderEventMeta').textContent = (currentEvent.date || '') + ' · ' + (currentEvent.time || '') + ' · ' + (currentEvent.venue || '');
+  updatePriceDisplay();
+
+  if ((currentEvent.price || 0) > 0) {
+    checkoutOverlay.classList.add('open');
+  } else {
+    completeRegistration(null);
+  }
+}
+
 if (registerBtn) {
   registerBtn.addEventListener('click', () => {
     if (!currentEvent) return;
@@ -156,17 +172,24 @@ if (registerBtn) {
       return;
     }
 
-    qty = 1;
-    qtyValue.textContent = qty;
-    document.getElementById('orderEventName').textContent = currentEvent.title;
-    document.getElementById('orderEventMeta').textContent = (currentEvent.date || '') + ' · ' + (currentEvent.time || '') + ' · ' + (currentEvent.venue || '');
-    updatePriceDisplay();
-
-    if ((currentEvent.price || 0) > 0) {
-      checkoutOverlay.classList.add('open');
-    } else {
-      completeRegistration(null);
-    }
+    db.collection('registrations')
+      .where('userId', '==', auth.currentUser.uid)
+      .where('eventId', '==', eventId)
+      .limit(1)
+      .get()
+      .then((snap) => {
+        if (!snap.empty) {
+          const existing = snap.docs[0].data();
+          showToast('You already have a ticket for this event.');
+          window.location.href = 'ticket.html?code=' + encodeURIComponent(existing.ticketCode);
+          return;
+        }
+        openCheckoutOrRegister();
+      })
+      .catch((err) => {
+        console.error(err);
+        openCheckoutOrRegister();
+      });
   });
 }
 

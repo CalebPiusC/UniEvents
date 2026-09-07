@@ -277,8 +277,8 @@ function requestRowHTML(id, req) {
       <div class="rdept">${req.department}</div>
       <div class="rquote">"${req.justification}"</div>
       <div class="req-actions">
-        <button class="a" data-action="approve" data-id="${id}" data-user="${req.userId}">Approve</button>
-        <button class="r" data-action="reject" data-id="${id}">Reject</button>
+        <button class="dash-btn solid" data-action="approve" data-id="${id}" data-user="${req.userId}">Approve</button>
+        <button class="dash-btn danger" data-action="reject" data-id="${id}">Reject</button>
       </div>
     </div>`;
 }

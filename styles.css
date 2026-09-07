@@ -111,12 +111,14 @@ nav.scrolled{ background:rgba(27,20,17,.88); backdrop-filter:blur(10px); border-
 }
 @media(max-width:900px){ .hero{ grid-template-columns:1fr; padding-top:140px; text-align:center; } }
 
-.hero-copy .eyebrow{
+.eyebrow{
   display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono', monospace;
   font-size:11px; letter-spacing:.1em; color:var(--coral); margin-bottom:16px;
+}
+.eyebrow-dot{ width:6px; height:6px; border-radius:50%; background:var(--coral); display:inline-block; }
+.hero-copy .eyebrow{
   opacity:0; animation:rise .7s ease forwards; animation-delay:0s;
 }
-.hero-copy .eyebrow-dot{ width:6px; height:6px; border-radius:50%; background:var(--coral); display:inline-block; }
 .hero-copy h1 .accent{ color:var(--coral); }
 .hero-copy h1{
   font-size:clamp(34px,4.6vw,54px); font-weight:800; line-height:1.08; letter-spacing:-.01em;
@@ -133,9 +135,9 @@ nav.scrolled{ background:rgba(27,20,17,.88); backdrop-filter:blur(10px); border-
 }
 @media(max-width:900px){ .hero-ctas{ justify-content:center; } }
 .btn-ghost{
-  font-size:13.5px; font-weight:700; padding:10px 20px; border-radius:24px;
-  border:1px solid var(--line); color:var(--text);
-  transition:border-color .15s ease, background .15s ease;
+  font-family:'Manrope', sans-serif; font-size:13.5px; font-weight:700; padding:10px 20px; border-radius:24px;
+  border:1px solid var(--line); color:var(--text); background:transparent; cursor:pointer;
+  display:inline-block; transition:border-color .15s ease, background .15s ease;
 }
 .btn-ghost:hover{ border-color:var(--dim); background:var(--surface); }
 

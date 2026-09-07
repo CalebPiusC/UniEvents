@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Tickets — UniEvents</title>
+<title>Contact — UniEvents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,8 +12,18 @@
 <body>
 
 <div class="bg-anim" aria-hidden="true">
-  <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
-  <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+  <span class="dot d1"></span>
+  <span class="dot d3"></span>
+  <span class="dot d6"></span>
+  <i class="fa-regular fa-bell symbol s1"></i>
+  <i class="fa-regular fa-calendar symbol s2"></i>
+  <i class="fa-solid fa-ticket symbol s3"></i>
+  <i class="fa-regular fa-comment-dots symbol s4"></i>
+  <i class="fa-solid fa-location-dot symbol s5"></i>
+  <i class="fa-regular fa-star symbol s6"></i>
+  <span class="bg-line l1"></span>
+  <span class="bg-line l2"></span>
+  <span class="bg-line l3"></span>
 </div>
 
 <nav id="nav">
@@ -21,7 +31,6 @@
     <a href="index.html" class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</a>
     <div class="nav-links">
       <a href="browse.html">Browse Events</a>
-      <a href="my-tickets.html">My Tickets</a>
       <a href="dashboard.html">For Organizers</a>
       <a href="about.html">About</a>
     </div>
@@ -35,7 +44,6 @@
   </div>
   <div class="mobile-menu" id="mobileMenu">
     <a href="browse.html">Browse Events</a>
-    <a href="my-tickets.html">My Tickets</a>
     <a href="dashboard.html">For Organizers</a>
     <a href="about.html">About</a>
     <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
@@ -45,18 +53,35 @@
   </div>
 </nav>
 
-<header class="wrap browse-hero">
-  <h1>My Tickets</h1>
-  <p>Every event you've registered for, in one place.</p>
-</header>
+<div class="wrap dash-wrap">
+  <div class="dash-head">
+    <div>
+      <span class="role-badge">GROUP 5</span>
+      <h1>Contact</h1>
+      <p>Questions about the project, an event listing, or organizer access? Send a note.</p>
+    </div>
+  </div>
 
-<section class="wrap">
-  <div class="event-grid" id="ticketsGrid"></div>
-  <p class="no-results" id="ticketsLoading" style="display:block;">Loading your tickets...</p>
-  <p class="no-results" id="ticketsEmpty" style="display:none;">
-    You haven't registered for anything yet. <a href="browse.html" style="color:var(--coral); font-weight:700;">Browse events</a>
-  </p>
-</section>
+  <form id="contactForm" class="apply-card">
+    <h3>Send a message</h3>
+    <p>This opens your email app with the details filled in. Replace the destination address in <code>contact.js</code> if you want mail to land in a group inbox.</p>
+
+    <div class="form-field" style="margin-bottom:14px;">
+      <label for="contactName">Your name</label>
+      <input type="text" id="contactName" required>
+    </div>
+    <div class="form-field" style="margin-bottom:14px;">
+      <label for="contactEmail">Your email</label>
+      <input type="email" id="contactEmail" required>
+    </div>
+    <div class="form-field" style="margin-bottom:16px;">
+      <label for="contactMessage">Message</label>
+      <textarea id="contactMessage" required placeholder="How can we help?"></textarea>
+    </div>
+    <p class="field-error" id="contactError"></p>
+    <button type="submit" class="btn-coral" id="contactSubmit" style="width:100%; padding:12px;">Open email</button>
+  </form>
+</div>
 
 <footer class="wrap">
   <div class="foot-inner">
@@ -75,6 +100,6 @@
 <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="script.js"></script>
-<script src="my-tickets.js"></script>
+<script src="contact.js"></script>
 </body>
 </html>
