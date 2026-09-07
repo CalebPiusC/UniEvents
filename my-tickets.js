@@ -11,10 +11,10 @@ const ticketsEmpty = document.getElementById('ticketsEmpty');
 function cardHTML(reg) {
   const statusLabel = reg.checkedIn ? 'Used' : 'Valid';
   return `
-    <a class="event-card" href="ticket.html?code=${encodeURIComponent(reg.ticketCode)}">
+    <a class="event-card" href="ticket.html?code=${encodeURIComponent(reg.ticketCode || '')}">
       <div class="event-photo a"><i class="fa-solid fa-ticket"></i></div>
       <div class="event-info">
-        <div><h5>${reg.eventTitle || 'Event'}</h5><p>${reg.eventVenue || ''} · ${reg.eventDate || ''}</p></div>
+        <div><h5>${escapeHtml(reg.eventTitle || 'Event')}</h5><p>${escapeHtml(reg.eventVenue || '')} · ${escapeHtml(reg.eventDate || '')}</p></div>
         <span class="price-pill">${statusLabel}</span>
       </div>
     </a>`;

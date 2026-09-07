@@ -12,6 +12,41 @@ if (nav) {
 }
 
 /* ---- Global toast helper — usable from any page's own JS ---- */
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isSafeHttpUrl(value) {
+  if (!value) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (err) {
+    return false;
+  }
+}
+
+function isPastEvent(ev) {
+  if (!ev || !ev.isoDate) return false;
+  const now = new Date();
+  const ymd = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  return ev.isoDate < ymd;
+}
+
+function makeTicketCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(8);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < bytes.length; i++) out += alphabet[bytes[i] % alphabet.length];
+  return 'UE-' + Date.now().toString(36).toUpperCase() + '-' + out;
+}
+
 function showToast(message) {
   let toastEl = document.getElementById('globalToast');
   if (!toastEl) {

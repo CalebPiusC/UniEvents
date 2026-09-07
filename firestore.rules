@@ -51,7 +51,20 @@ service cloud.firestore {
       allow update: if isOrganizerOrAdmin()
                     && request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(['checkedIn', 'checkedInAt']);
-      allow delete: if false;
+      allow delete: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && resource.data.checkedIn != true;
+    }
+
+    match /events/{eventId}/reviews/{reviewId} {
+      allow read: if true;
+      allow create, update: if isSignedIn()
+                            && request.auth.uid == reviewId
+                            && request.resource.data.userId == request.auth.uid
+                            && request.resource.data.stars is int
+                            && request.resource.data.stars >= 1
+                            && request.resource.data.stars <= 5;
+      allow delete: if isSignedIn() && request.auth.uid == reviewId;
     }
 
     match /organizerRequests/{reqId} {

@@ -136,12 +136,13 @@ function eventRowHTML(id, ev) {
   return `
     <div class="dash-event-row" data-id="${id}">
       <div>
-        <div class="ename">${ev.title}</div>
-        <div class="emeta">${ev.date || ''} · ${ev.venue || ''} · ${(ev.registeredCount||0)}/${ev.capacity||0} registered</div>
+        <div class="ename">${escapeHtml(ev.title)}</div>
+        <div class="emeta">${escapeHtml(ev.date || '')} · ${escapeHtml(ev.venue || '')} · ${(ev.registeredCount||0)}/${ev.capacity||0} registered</div>
       </div>
       <div class="dash-event-actions">
         <span class="stat-pill">${formatNaira((ev.price||0) * (ev.registeredCount||0))} collected</span>
-        <button class="dash-btn" data-action="registrants" data-id="${id}" data-title="${ev.title}">Registrants</button>
+        <button class="dash-btn" data-action="copy" data-id="${id}">Copy link</button>
+        <button class="dash-btn" data-action="registrants" data-id="${id}" data-title="${escapeHtml(ev.title)}">Registrants</button>
         <button class="dash-btn" data-action="edit" data-id="${id}">Edit</button>
         <button class="dash-btn danger" data-action="delete" data-id="${id}">Delete</button>
       </div>
@@ -149,8 +150,12 @@ function eventRowHTML(id, ev) {
 }
 
 function loadMyEvents() {
-  db.collection('events').where('createdBy', '==', currentUserId).orderBy('createdAt', 'desc')
-    .onSnapshot((snap) => {
+  const role = currentUserDoc.role || 'student';
+  const query = role === 'admin'
+    ? db.collection('events').orderBy('createdAt', 'desc')
+    : db.collection('events').where('createdBy', '==', currentUserId).orderBy('createdAt', 'desc');
+
+  query.onSnapshot((snap) => {
       const listEl = document.getElementById('myEventsList');
       const noneEl = document.getElementById('noEventsYet');
       if (snap.empty) {
@@ -188,6 +193,16 @@ function attachEventRowHandlers(docs) {
   document.querySelectorAll('[data-action="registrants"]').forEach(btn => {
     btn.onclick = () => openRegistrants(btn.dataset.id, btn.dataset.title);
   });
+  document.querySelectorAll('[data-action="copy"]').forEach(btn => {
+    btn.onclick = () => {
+      const url = new URL('event-detail.html?id=' + encodeURIComponent(btn.dataset.id), window.location.href).href;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('Event link copied.')).catch(() => prompt('Copy this link:', url));
+      } else {
+        prompt('Copy this link:', url);
+      }
+    };
+  });
 }
 
 // ---- Create/Edit modal ----
@@ -208,6 +223,7 @@ function openEventModal(id, ev) {
   document.getElementById('fCapacity').value = ev ? ev.capacity : 50;
   document.getElementById('fDescription').value = ev ? ev.description : '';
   document.getElementById('fExpect').value = ev && Array.isArray(ev.whatToExpect) ? ev.whatToExpect.join('\n') : '';
+  document.getElementById('fImageUrl').value = ev && ev.imageUrl ? ev.imageUrl : '';
   document.getElementById('eventFormError').classList.remove('show');
   eventModalOverlay.classList.add('open');
 }
@@ -223,10 +239,16 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
   const capacity = parseInt(document.getElementById('fCapacity').value, 10) || 1;
   const description = document.getElementById('fDescription').value.trim();
   const whatToExpect = document.getElementById('fExpect').value.split('\n').map(s => s.trim()).filter(Boolean);
+  const imageUrl = document.getElementById('fImageUrl').value.trim();
   const errEl = document.getElementById('eventFormError');
 
   if (!title || !isoDate || !venue || !time) {
     errEl.textContent = 'Title, date, time, and venue are required.';
+    errEl.classList.add('show');
+    return;
+  }
+  if (imageUrl && !isSafeHttpUrl(imageUrl)) {
+    errEl.textContent = 'Cover image must be a valid http(s) URL.';
     errEl.classList.add('show');
     return;
   }
@@ -237,7 +259,7 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
 
   const payload = {
     title, category, isoDate, date, dateBadgeMonth, dateBadgeDay, time, venue, host,
-    price, capacity, description, whatToExpect,
+    price, capacity, description, whatToExpect, imageUrl,
     icon: style.icon, colorVariant: style.colorVariant
   };
 
@@ -275,7 +297,7 @@ function openRegistrants(eventId, title) {
       listEl.innerHTML = snap.docs.map(d => {
         const r = d.data();
         total += r.amountPaid || 0;
-        return `<div class="registrant-row"><span class="rn">${r.attendeeName || ''} ${r.checkedIn ? '✓' : ''}</span><span class="rc">${r.ticketCode}</span></div>`;
+        return `<div class="registrant-row"><span class="rn">${escapeHtml(r.attendeeName || '')} ${r.checkedIn ? '✓' : ''}</span><span class="rc">${escapeHtml(r.ticketCode)}</span></div>`;
       }).join('');
     }
     document.getElementById('totalCollected').textContent = formatNaira(total) + ' collected';
@@ -288,9 +310,9 @@ function openRegistrants(eventId, title) {
 function requestRowHTML(id, req) {
   return `
     <div class="req-row" data-id="${id}">
-      <div class="rname">${req.userName || req.userEmail}</div>
-      <div class="rdept">${req.department}</div>
-      <div class="rquote">"${req.justification}"</div>
+      <div class="rname">${escapeHtml(req.userName || req.userEmail)}</div>
+      <div class="rdept">${escapeHtml(req.department)}</div>
+      <div class="rquote">"${escapeHtml(req.justification)}"</div>
       <div class="req-actions">
         <button class="dash-btn solid" data-action="approve" data-id="${id}" data-user="${req.userId}">Approve</button>
         <button class="dash-btn danger" data-action="reject" data-id="${id}">Reject</button>

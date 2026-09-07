@@ -73,6 +73,23 @@ firebase deploy --only hosting
 
 ---
 
+## Extra features
+
+- **Saved events** — heart on event detail; **Saved** chip on Browse
+- **Upcoming / Past** filters
+- **Cover image URL** when creating an event
+- **Reviews** (1–5 stars) on event detail
+- **Forgot password** on the login page
+- **Print ticket**, **Add to calendar**, **Cancel registration** (if not checked in)
+- **Manual ticket code** on the scanner if the camera fails
+- Admins see **all events** and can copy an event link
+
+Redeploy rules after pulling this version:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
 ## Demo path (once 1–3 are done)
 
 1. Sign up as a student → Browse → register for a **free** event → My Tickets → QR.
