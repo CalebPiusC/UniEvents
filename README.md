@@ -61,11 +61,24 @@ To switch accounts later, replace `PAYSTACK_PUBLIC_KEY` in `detail.js`.
 
 ### 5. Host it (public demo URL)
 
+**Netlify (easiest, free)**
+
+1. Push this branch to GitHub.
+2. [app.netlify.com](https://app.netlify.com) → **Add new site** → **Import from Git** → this repo.
+3. Branch: `arena/01a07ba1-unievents` (or `main` if you merge first).
+4. Publish directory: `.`  (leave build command empty).
+5. Deploy. You’ll get a URL like `https://something.netlify.app`.
+6. Firebase Console → Authentication → Settings → **Authorized domains** → add `something.netlify.app` (no `https://`).
+
+Without step 6, login/signup will fail on the live site.
+
+**Firebase Hosting (optional)**
+
 ```bash
 firebase deploy --only hosting
 ```
 
-You’ll get something like `https://unievents-c7c44.web.app`. Also add that domain under Authentication → Settings → Authorized domains.
+You’ll get something like `https://unievents-c7c44.web.app`. Add that domain under Authorized domains too.
 
 ### 6. Storage (cover photo uploads)
 
