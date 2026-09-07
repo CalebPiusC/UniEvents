@@ -93,7 +93,7 @@ deploys everything in one go.
 
 - **Saved events** — heart on event detail; **Saved** chip on Browse
 - **Upcoming / Past** filters
-- **Cover photo upload** (Storage) or image URL when creating an event
+- **Category sample photos** (academic / social / sports / food) — no paid Storage. Optional URL override.
 - **Draft vs published**, **Duplicate event**, **Load demo events** (admin)
 - **Waitlist** when an event is full
 - **Download registrants CSV**
@@ -127,3 +127,4 @@ firebase deploy --only firestore:rules
 | `events` | Listings created by organizers |
 | `registrations` | Tickets (`ticketCode`, `checkedIn`) |
 | `organizerRequests` | Apply-to-organize queue |
+| `waitlist` | Students waiting on a full event |

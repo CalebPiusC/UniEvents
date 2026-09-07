@@ -26,9 +26,9 @@ function cardHTML(id, ev) {
   if (full) priceLabel = 'Full';
   if (past) priceLabel = 'Ended';
 
-  const safeImg = isSafeHttpUrl(ev.imageUrl) ? ev.imageUrl.replace(/"/g, '') : '';
-  const photoStyle = safeImg
-    ? `style="background-image:linear-gradient(rgba(27,20,17,.15),rgba(27,20,17,.55)),url('${safeImg}');background-size:cover;background-position:center;"`
+  const cover = eventCoverUrl(ev).replace(/"/g, '');
+  const photoStyle = cover
+    ? `style="background-image:linear-gradient(rgba(27,20,17,.15),rgba(27,20,17,.55)),url('${cover}');background-size:cover;background-position:center;"`
     : '';
   const saved = favorites.indexOf(id) !== -1;
 

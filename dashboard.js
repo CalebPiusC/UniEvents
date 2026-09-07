@@ -208,6 +208,45 @@ function attachEventRowHandlers(docs) {
       }
     };
   });
+  document.querySelectorAll('[data-action="publish"]').forEach(btn => {
+    btn.onclick = () => {
+      const doc = docs.find(d => d.id === btn.dataset.id);
+      if (!doc) return;
+      const next = doc.data().published === false;
+      db.collection('events').doc(doc.id).update({ published: next }).then(() => {
+        showToast(next ? 'Published to Browse Events.' : 'Moved to draft.');
+      });
+    };
+  });
+  document.querySelectorAll('[data-action="duplicate"]').forEach(btn => {
+    btn.onclick = () => {
+      const doc = docs.find(d => d.id === btn.dataset.id);
+      if (!doc) return;
+      const ev = doc.data();
+      db.collection('events').add({
+        title: (ev.title || 'Event') + ' (copy)',
+        category: ev.category || 'academic',
+        isoDate: ev.isoDate || '',
+        date: ev.date || '',
+        dateBadgeMonth: ev.dateBadgeMonth || '',
+        dateBadgeDay: ev.dateBadgeDay || '',
+        time: ev.time || '',
+        venue: ev.venue || '',
+        host: ev.host || '',
+        price: ev.price || 0,
+        capacity: ev.capacity || 50,
+        description: ev.description || '',
+        whatToExpect: Array.isArray(ev.whatToExpect) ? ev.whatToExpect : [],
+        imageUrl: ev.imageUrl || eventCoverUrl(ev),
+        icon: ev.icon || 'calendar-star',
+        colorVariant: ev.colorVariant || 'a',
+        registeredCount: 0,
+        published: false,
+        createdBy: currentUserId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => showToast('Draft copy created.'));
+    };
+  });
 }
 
 // ---- Create/Edit modal ----
@@ -228,25 +267,10 @@ function openEventModal(id, ev) {
   document.getElementById('fCapacity').value = ev ? ev.capacity : 50;
   document.getElementById('fDescription').value = ev ? ev.description : '';
   document.getElementById('fExpect').value = ev && Array.isArray(ev.whatToExpect) ? ev.whatToExpect.join('\n') : '';
-  document.getElementById('fImageUrl').value = ev && ev.imageUrl ? ev.imageUrl : '';
+  document.getElementById('fImageUrl').value = ev && ev.imageUrl && isSafeHttpUrl(ev.imageUrl) ? ev.imageUrl : '';
   document.getElementById('fPublished').checked = !ev || ev.published !== false;
-  const fileInput = document.getElementById('fImageFile');
-  if (fileInput) fileInput.value = '';
   document.getElementById('eventFormError').classList.remove('show');
   eventModalOverlay.classList.add('open');
-}
-
-function uploadCoverIfNeeded(existingUrl) {
-  const fileInput = document.getElementById('fImageFile');
-  const file = fileInput && fileInput.files && fileInput.files[0];
-  if (!file) return Promise.resolve(existingUrl);
-  if (!storage) {
-    showToast('Enable Firebase Storage to upload photos, or paste an image URL instead.');
-    return Promise.resolve(existingUrl);
-  }
-  const safeName = Date.now() + '-' + file.name.replace(/[^\w.\-]+/g, '_');
-  const ref = storage.ref('event-covers/' + currentUserId + '/' + safeName);
-  return ref.put(file).then((snap) => snap.ref.getDownloadURL());
 }
 
 document.getElementById('eventFormSubmit').addEventListener('click', () => {
@@ -269,8 +293,8 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
     errEl.classList.add('show');
     return;
   }
-  if (imageUrl && !isSafeHttpUrl(imageUrl)) {
-    errEl.textContent = 'Cover image must be a valid http(s) URL.';
+  if (imageUrlInput && !isSafeHttpUrl(imageUrlInput)) {
+    errEl.textContent = 'Cover image must be a valid http(s) URL, or leave it blank for the sample photo.';
     errEl.classList.add('show');
     return;
   }
@@ -278,10 +302,11 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
 
   const { date, dateBadgeMonth, dateBadgeDay } = deriveDateFields(isoDate);
   const style = CATEGORY_STYLE[category] || CATEGORY_STYLE.academic;
+  const imageUrl = imageUrlInput || (CATEGORY_COVERS[category] || CATEGORY_COVERS.academic);
 
   const payload = {
     title, category, isoDate, date, dateBadgeMonth, dateBadgeDay, time, venue, host,
-    price, capacity, description, whatToExpect, imageUrl,
+    price, capacity, description, whatToExpect, imageUrl, published,
     icon: style.icon, colorVariant: style.colorVariant
   };
 
@@ -384,7 +409,7 @@ const DEMO_EVENTS = [
     capacity: 400,
     description: 'Meet recruiters, walk through live demos, and drop your CV with companies hiring OAU students this session.',
     whatToExpect: ['40+ exhibitors', 'CV clinic', 'Panel on internships'],
-    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=80'
+    imageUrl: 'images/academic.jpg'
   },
   {
     seedId: 'demo-football',
@@ -398,7 +423,7 @@ const DEMO_EVENTS = [
     capacity: 800,
     description: 'The two remaining faculties meet under the lights. Bring your scarf — gates open at 3.',
     whatToExpect: ['Student bands', 'Halftime challenge', 'QR check-in at the gate'],
-    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80'
+    imageUrl: 'images/sports.jpg'
   },
   {
     seedId: 'demo-seminar',
@@ -412,7 +437,7 @@ const DEMO_EVENTS = [
     capacity: 80,
     description: 'Final-year students present ongoing work. Open to the faculty — no registration wall to browse, ticket at the door.',
     whatToExpect: ['Lightning talks', 'Poster session', 'Tea after'],
-    imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=80'
+    imageUrl: 'images/academic.jpg'
   }
 ];
 

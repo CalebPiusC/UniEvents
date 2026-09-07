@@ -139,11 +139,10 @@
       <div class="form-field"><label>Price (₦, 0 = free)</label><input type="number" id="fPrice" value="0" min="0"></div>
       <div class="form-field"><label>Capacity</label><input type="number" id="fCapacity" value="50" min="1"></div>
       <div class="form-field full">
-        <label>Cover image URL (free — paste any https link)</label>
-        <input type="url" id="fImageUrl" placeholder="https://images.unsplash.com/...">
-        <p class="review-hint" style="margin-top:6px;">Need a picture? Search Unsplash or Google Images → copy image address. File upload below only works if Firebase Storage is on the paid Blaze plan.</p>
+        <label>Cover image (optional URL)</label>
+        <input type="url" id="fImageUrl" placeholder="Leave blank to use the sample photo for this category">
+        <p class="review-hint" style="margin-top:6px;">Each category already has a sample photo (academic, social, sports, food). Only paste a URL if you want to override it. No paid Storage needed.</p>
       </div>
-      <div class="form-field full"><label>Upload a file (optional, needs Blaze)</label><input type="file" id="fImageFile" accept="image/*"></div>
       <div class="form-field full" style="display:flex;align-items:center;gap:10px;">
         <input type="checkbox" id="fPublished" checked>
         <label for="fPublished" style="margin:0;">Publish to Browse Events</label>

@@ -31,6 +31,25 @@ function isSafeHttpUrl(value) {
   }
 }
 
+const CATEGORY_COVERS = {
+  academic: 'images/academic.jpg',
+  social: 'images/social.jpg',
+  sports: 'images/sports.jpg',
+  food: 'images/food.jpg'
+};
+
+function isCoverSrc(value) {
+  if (!value) return false;
+  if (isSafeHttpUrl(value)) return true;
+  return String(value).indexOf('images/') === 0;
+}
+
+function eventCoverUrl(ev) {
+  if (isCoverSrc(ev && ev.imageUrl)) return ev.imageUrl;
+  const cat = (ev && ev.category) || 'academic';
+  return CATEGORY_COVERS[cat] || CATEGORY_COVERS.academic;
+}
+
 function isPastEvent(ev) {
   if (!ev || !ev.isoDate) return false;
   const now = new Date();

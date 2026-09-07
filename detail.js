@@ -68,8 +68,9 @@ function renderEvent() {
   document.getElementById('priceTagDisplay').textContent = (ev.price && ev.price > 0) ? formatNaira(ev.price) : 'Free';
 
   const hero = document.querySelector('.detail-hero');
-  if (hero && isSafeHttpUrl(ev.imageUrl)) {
-    hero.style.backgroundImage = 'linear-gradient(rgba(27,20,17,.35), rgba(27,20,17,.78)), url("' + ev.imageUrl.replace(/"/g, '') + '")';
+  const cover = eventCoverUrl(ev);
+  if (hero && cover) {
+    hero.style.backgroundImage = 'linear-gradient(rgba(27,20,17,.35), rgba(27,20,17,.78)), url("' + cover.replace(/"/g, '') + '")';
     hero.style.backgroundSize = 'cover';
     hero.style.backgroundPosition = 'center';
   }
