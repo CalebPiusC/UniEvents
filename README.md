@@ -59,15 +59,31 @@ Use [Paystack test cards](https://paystack.com/docs/payments/test-payments/). Th
 
 To switch accounts later, replace `PAYSTACK_PUBLIC_KEY` in `detail.js`.
 
-### 5. Optional: host it
+### 5. Host it (public demo URL)
 
 ```bash
 firebase deploy --only hosting
 ```
 
-`firebase.json` already points hosting at this folder.
+You’ll get something like `https://unievents-c7c44.web.app`. Also add that domain under Authentication → Settings → Authorized domains.
 
-### 6. Contact inbox
+### 6. Storage (cover photo uploads)
+
+Console → **Build → Storage → Get started**, then:
+
+```bash
+firebase deploy --only storage
+```
+
+Without this, organizers can still paste an image URL.
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes,storage,hosting
+```
+
+deploys everything in one go.
+
+### 7. Contact inbox
 
 `contact.js` uses `unievents.group5@gmail.com`. Change `CONTACT_TO` to a real group address if you want replies.
 
@@ -77,7 +93,10 @@ firebase deploy --only hosting
 
 - **Saved events** — heart on event detail; **Saved** chip on Browse
 - **Upcoming / Past** filters
-- **Cover image URL** when creating an event
+- **Cover photo upload** (Storage) or image URL when creating an event
+- **Draft vs published**, **Duplicate event**, **Load demo events** (admin)
+- **Waitlist** when an event is full
+- **Download registrants CSV**
 - **Reviews** (1–5 stars) on event detail
 - **Forgot password** on the login page
 - **Print ticket**, **Add to calendar**, **Cancel registration** (if not checked in)
@@ -95,8 +114,10 @@ firebase deploy --only firestore:rules
 1. Sign up as a student → Browse → register for a **free** event → My Tickets → QR.
 2. Dashboard → apply to organize.
 3. Log in as the **admin** → approve the request.
-4. Log back in as the organizer → **+ New Event**.
-5. Dashboard → **Scan Tickets** → scan the QR.
+4. Log in as the **admin** → **Load demo events** (or create your own) → approve organizer requests.
+5. Organizer → **+ New Event**, or **Duplicate**.
+6. Dashboard → **Scan Tickets** → scan the QR.
+7. Full event → student taps **Join waitlist**. Registrants modal has **Download CSV**.
 
 ## Collections
 

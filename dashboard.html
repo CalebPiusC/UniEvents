@@ -94,7 +94,8 @@
         <h1>Your events</h1>
         <p>Create and manage the events you're hosting.</p>
       </div>
-      <div style="display:flex; gap:10px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-ghost" id="seedBtn" type="button" style="display:none;">Load demo events</button>
         <a href="scan.html" class="btn-ghost">Scan Tickets</a>
         <button class="btn-coral" id="newEventBtn">+ New Event</button>
       </div>
@@ -135,7 +136,12 @@
       <div class="form-field"><label>Host / department</label><input type="text" id="fHost"></div>
       <div class="form-field"><label>Price (₦, 0 = free)</label><input type="number" id="fPrice" value="0" min="0"></div>
       <div class="form-field"><label>Capacity</label><input type="number" id="fCapacity" value="50" min="1"></div>
-      <div class="form-field full"><label>Cover image URL (optional)</label><input type="url" id="fImageUrl" placeholder="https://"></div>
+      <div class="form-field full"><label>Cover photo (optional)</label><input type="file" id="fImageFile" accept="image/*"></div>
+      <div class="form-field full"><label>Or cover image URL</label><input type="url" id="fImageUrl" placeholder="https://"></div>
+      <div class="form-field full" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="fPublished" checked>
+        <label for="fPublished" style="margin:0;">Publish to Browse Events</label>
+      </div>
       <div class="form-field full"><label>Description</label><textarea id="fDescription"></textarea></div>
       <div class="form-field full"><label>What to expect (one per line)</label><textarea id="fExpect"></textarea></div>
     </div>
@@ -152,8 +158,12 @@
   <div class="modal-card checkout-card" style="max-width:440px; text-align:left;">
     <h3 id="registrantsTitle" style="text-align:left;">Registrants</h3>
     <p class="stat-pill" id="totalCollected" style="margin-bottom:16px; display:inline-block;"></p>
+    <button class="dash-btn" id="csvExportBtn" type="button" style="margin-bottom:14px;">Download CSV</button>
     <div id="registrantsList"></div>
     <p class="no-results" id="noRegistrants" style="display:none;">No one has registered yet.</p>
+    <h3 style="text-align:left; font-size:15px; margin:18px 0 8px;">Waitlist</h3>
+    <div id="waitlistList"></div>
+    <p class="no-results" id="noWaitlist" style="display:none;">No one is on the waitlist.</p>
     <button class="checkout-cancel" id="registrantsClose" style="width:100%; margin-top:16px;">Close</button>
   </div>
 </div>

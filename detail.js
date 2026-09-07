@@ -96,17 +96,21 @@ function renderEvent() {
 
   registerBtn.textContent = (ev.price && ev.price > 0) ? 'Buy Ticket — ' + formatNaira(ev.price) : 'Get a Ticket';
   registerBtn.disabled = false;
+  registerBtn.dataset.mode = 'register';
   if (isPastEvent(ev)) {
     registerBtn.textContent = 'This event has ended';
     registerBtn.disabled = true;
+    registerBtn.dataset.mode = 'ended';
   } else if (registered >= capacity && capacity > 0) {
-    registerBtn.textContent = 'Event Full';
-    registerBtn.disabled = true;
+    registerBtn.textContent = 'Join waitlist';
+    registerBtn.disabled = false;
+    registerBtn.dataset.mode = 'waitlist';
   }
 
   detailMain.style.display = 'block';
   stickyCta.style.display = 'flex';
   loadReviews();
+  refreshWaitlistButton();
 }
 
 // ---- Share this event ----
@@ -195,6 +199,41 @@ function openCheckoutOrRegister() {
   }
 }
 
+function refreshWaitlistButton() {
+  if (!auth.currentUser || !eventId || !registerBtn) return;
+  if (registerBtn.dataset.mode !== 'waitlist' && registerBtn.dataset.mode !== 'waiting') return;
+  db.collection('waitlist')
+    .where('userId', '==', auth.currentUser.uid)
+    .where('eventId', '==', eventId)
+    .limit(1)
+    .get()
+    .then((snap) => {
+      if (!snap.empty) {
+        registerBtn.textContent = 'You’re on the waitlist';
+        registerBtn.disabled = true;
+        registerBtn.dataset.mode = 'waiting';
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function joinWaitlist() {
+  db.collection('waitlist').add({
+    userId: auth.currentUser.uid,
+    eventId: eventId,
+    eventTitle: currentEvent.title || '',
+    userName: auth_state_cache.attendeeName || auth.currentUser.email,
+    userEmail: auth.currentUser.email || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showToast('You’re on the waitlist. If a spot opens, register from this page.');
+    refreshWaitlistButton();
+  }).catch((err) => {
+    console.error(err);
+    showToast('Could not join the waitlist.');
+  });
+}
+
 if (registerBtn) {
   registerBtn.addEventListener('click', () => {
     if (!currentEvent) return;
@@ -205,6 +244,12 @@ if (registerBtn) {
       window.location.href = 'login.html';
       return;
     }
+
+    if (registerBtn.dataset.mode === 'waitlist') {
+      joinWaitlist();
+      return;
+    }
+    if (registerBtn.dataset.mode === 'ended' || registerBtn.dataset.mode === 'waiting') return;
 
     db.collection('registrations')
       .where('userId', '==', auth.currentUser.uid)
@@ -276,6 +321,7 @@ auth.onAuthStateChanged((user) => {
       auth_state_cache.attendeeName = data.name || user.email;
       const favs = Array.isArray(data.favorites) ? data.favorites : [];
       setHeartUI(!!eventId && favs.indexOf(eventId) !== -1);
+      refreshWaitlistButton();
     });
   } else {
     setHeartUI(false);

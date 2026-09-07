@@ -65,6 +65,8 @@ function renderForRole() {
   if (role === 'admin') {
     adminSection.style.display = 'block';
     loadPendingRequests();
+    const seedBtn = document.getElementById('seedBtn');
+    if (seedBtn) seedBtn.style.display = 'inline-block';
   }
 }
 
@@ -133,16 +135,19 @@ document.getElementById('applySubmit').addEventListener('click', () => {
 let editingEventId = null;
 
 function eventRowHTML(id, ev) {
+  const published = ev.published !== false;
   return `
     <div class="dash-event-row" data-id="${id}">
       <div>
-        <div class="ename">${escapeHtml(ev.title)}</div>
+        <div class="ename">${escapeHtml(ev.title)} ${published ? '' : '<span class="stat-pill">DRAFT</span>'}</div>
         <div class="emeta">${escapeHtml(ev.date || '')} · ${escapeHtml(ev.venue || '')} · ${(ev.registeredCount||0)}/${ev.capacity||0} registered</div>
       </div>
       <div class="dash-event-actions">
         <span class="stat-pill">${formatNaira((ev.price||0) * (ev.registeredCount||0))} collected</span>
         <button class="dash-btn" data-action="copy" data-id="${id}">Copy link</button>
         <button class="dash-btn" data-action="registrants" data-id="${id}" data-title="${escapeHtml(ev.title)}">Registrants</button>
+        <button class="dash-btn" data-action="duplicate" data-id="${id}">Duplicate</button>
+        <button class="dash-btn" data-action="publish" data-id="${id}">${published ? 'Unpublish' : 'Publish'}</button>
         <button class="dash-btn" data-action="edit" data-id="${id}">Edit</button>
         <button class="dash-btn danger" data-action="delete" data-id="${id}">Delete</button>
       </div>
@@ -224,8 +229,24 @@ function openEventModal(id, ev) {
   document.getElementById('fDescription').value = ev ? ev.description : '';
   document.getElementById('fExpect').value = ev && Array.isArray(ev.whatToExpect) ? ev.whatToExpect.join('\n') : '';
   document.getElementById('fImageUrl').value = ev && ev.imageUrl ? ev.imageUrl : '';
+  document.getElementById('fPublished').checked = !ev || ev.published !== false;
+  const fileInput = document.getElementById('fImageFile');
+  if (fileInput) fileInput.value = '';
   document.getElementById('eventFormError').classList.remove('show');
   eventModalOverlay.classList.add('open');
+}
+
+function uploadCoverIfNeeded(existingUrl) {
+  const fileInput = document.getElementById('fImageFile');
+  const file = fileInput && fileInput.files && fileInput.files[0];
+  if (!file) return Promise.resolve(existingUrl);
+  if (!storage) {
+    showToast('Enable Firebase Storage to upload photos, or paste an image URL instead.');
+    return Promise.resolve(existingUrl);
+  }
+  const safeName = Date.now() + '-' + file.name.replace(/[^\w.\-]+/g, '_');
+  const ref = storage.ref('event-covers/' + currentUserId + '/' + safeName);
+  return ref.put(file).then((snap) => snap.ref.getDownloadURL());
 }
 
 document.getElementById('eventFormSubmit').addEventListener('click', () => {
@@ -239,7 +260,8 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
   const capacity = parseInt(document.getElementById('fCapacity').value, 10) || 1;
   const description = document.getElementById('fDescription').value.trim();
   const whatToExpect = document.getElementById('fExpect').value.split('\n').map(s => s.trim()).filter(Boolean);
-  const imageUrl = document.getElementById('fImageUrl').value.trim();
+  const imageUrlInput = document.getElementById('fImageUrl').value.trim();
+  const published = document.getElementById('fPublished').checked;
   const errEl = document.getElementById('eventFormError');
 
   if (!title || !isoDate || !venue || !time) {
@@ -281,9 +303,12 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
 const registrantsOverlay = document.getElementById('registrantsOverlay');
 document.getElementById('registrantsClose').addEventListener('click', () => registrantsOverlay.classList.remove('open'));
 
+let csvRows = [];
+
 function openRegistrants(eventId, title) {
   document.getElementById('registrantsTitle').textContent = 'Registrants — ' + title;
   registrantsOverlay.classList.add('open');
+  csvRows = [['Name', 'Ticket code', 'Quantity', 'Amount paid', 'Checked in', 'Registered at']];
 
   db.collection('registrations').where('eventId', '==', eventId).get().then((snap) => {
     const listEl = document.getElementById('registrantsList');
@@ -297,10 +322,136 @@ function openRegistrants(eventId, title) {
       listEl.innerHTML = snap.docs.map(d => {
         const r = d.data();
         total += r.amountPaid || 0;
+        const when = r.registeredAt && r.registeredAt.toDate ? r.registeredAt.toDate().toISOString() : '';
+        csvRows.push([
+          r.attendeeName || '',
+          r.ticketCode || '',
+          r.quantity || 1,
+          r.amountPaid || 0,
+          r.checkedIn ? 'yes' : 'no',
+          when
+        ]);
         return `<div class="registrant-row"><span class="rn">${escapeHtml(r.attendeeName || '')} ${r.checkedIn ? '✓' : ''}</span><span class="rc">${escapeHtml(r.ticketCode)}</span></div>`;
       }).join('');
     }
     document.getElementById('totalCollected').textContent = formatNaira(total) + ' collected';
+  });
+
+  const waitEl = document.getElementById('waitlistList');
+  const noWait = document.getElementById('noWaitlist');
+  db.collection('waitlist').where('eventId', '==', eventId).get().then((snap) => {
+    if (!waitEl) return;
+    if (snap.empty) {
+      waitEl.innerHTML = '';
+      if (noWait) noWait.style.display = 'block';
+      return;
+    }
+    if (noWait) noWait.style.display = 'none';
+    waitEl.innerHTML = snap.docs.map(d => {
+      const w = d.data();
+      return `<div class="registrant-row"><span class="rn">${escapeHtml(w.userName || w.userEmail || '')}</span><span class="rc">waiting</span></div>`;
+    }).join('');
+  }).catch((err) => console.error(err));
+}
+
+const csvExportBtn = document.getElementById('csvExportBtn');
+if (csvExportBtn) {
+  csvExportBtn.addEventListener('click', () => {
+    if (csvRows.length <= 1) {
+      showToast('No registrants to export yet.');
+      return;
+    }
+    const body = csvRows.map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const blob = new Blob([body], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'unievents-registrants.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
+const DEMO_EVENTS = [
+  {
+    seedId: 'demo-careers',
+    title: 'Careers & Tech Fair',
+    category: 'academic',
+    isoDate: '2026-09-18',
+    time: '10:00 AM – 4:00 PM',
+    venue: 'Oduduwa Hall',
+    host: 'OAU Career Services',
+    price: 0,
+    capacity: 400,
+    description: 'Meet recruiters, walk through live demos, and drop your CV with companies hiring OAU students this session.',
+    whatToExpect: ['40+ exhibitors', 'CV clinic', 'Panel on internships'],
+    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=80'
+  },
+  {
+    seedId: 'demo-football',
+    title: 'Inter-Faculty Football Final',
+    category: 'sports',
+    isoDate: '2026-09-20',
+    time: '4:00 PM',
+    venue: 'Sports Complex',
+    host: 'OAU Sports Council',
+    price: 500,
+    capacity: 800,
+    description: 'The two remaining faculties meet under the lights. Bring your scarf — gates open at 3.',
+    whatToExpect: ['Student bands', 'Halftime challenge', 'QR check-in at the gate'],
+    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1400&q=80'
+  },
+  {
+    seedId: 'demo-seminar',
+    title: 'SEN Research Seminar',
+    category: 'academic',
+    isoDate: '2026-09-16',
+    time: '2:00 – 4:00 PM',
+    venue: 'Computer Building LT',
+    host: 'Department of Computer Science & Engineering',
+    price: 0,
+    capacity: 80,
+    description: 'Final-year students present ongoing work. Open to the faculty — no registration wall to browse, ticket at the door.',
+    whatToExpect: ['Lightning talks', 'Poster session', 'Tea after'],
+    imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=80'
+  }
+];
+
+const seedBtn = document.getElementById('seedBtn');
+if (seedBtn) {
+  seedBtn.addEventListener('click', () => {
+    seedBtn.disabled = true;
+    db.collection('events').where('seedId', 'in', DEMO_EVENTS.map(e => e.seedId)).get()
+      .then((snap) => {
+        const have = {};
+        snap.docs.forEach(d => { have[d.data().seedId] = true; });
+        const missing = DEMO_EVENTS.filter(e => !have[e.seedId]);
+        if (missing.length === 0) {
+          showToast('Demo events are already loaded.');
+          return;
+        }
+        const batch = db.batch();
+        missing.forEach((ev) => {
+          const { date, dateBadgeMonth, dateBadgeDay } = deriveDateFields(ev.isoDate);
+          const style = CATEGORY_STYLE[ev.category] || CATEGORY_STYLE.academic;
+          const ref = db.collection('events').doc();
+          batch.set(ref, {
+            ...ev,
+            date, dateBadgeMonth, dateBadgeDay,
+            icon: style.icon,
+            colorVariant: style.colorVariant,
+            registeredCount: 0,
+            published: true,
+            createdBy: currentUserId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        return batch.commit().then(() => showToast('Added ' + missing.length + ' demo event(s).'));
+      })
+      .catch((err) => {
+        console.error(err);
+        showToast('Could not load demo events — check the console.');
+      })
+      .finally(() => { seedBtn.disabled = false; });
   });
 }
 

@@ -67,6 +67,16 @@ service cloud.firestore {
       allow delete: if isSignedIn() && request.auth.uid == reviewId;
     }
 
+    match /waitlist/{itemId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isOrganizerOrAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isOrganizerOrAdmin()
+      );
+    }
+
     match /organizerRequests/{reqId} {
       allow read: if isSignedIn() && (
         resource.data.userId == request.auth.uid || isAdmin()

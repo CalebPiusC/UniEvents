@@ -58,6 +58,7 @@ function render() {
   }
 
   const filtered = allEvents.filter(ev => {
+    if (ev.published === false) return false;
     const haystack = ((ev.title || '') + ' ' + (ev.venue || '') + ' ' + (ev.host || '')).toLowerCase();
     const matchesSearch = query === '' || haystack.includes(query);
     let matchesChip = true;

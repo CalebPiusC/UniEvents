@@ -3,6 +3,9 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
     "ignore": [
@@ -10,7 +13,8 @@
       "**/.*",
       "README.md",
       "firestore.rules",
-      "firestore.indexes.json"
+      "firestore.indexes.json",
+      "storage.rules"
     ]
   }
 }
