@@ -3,9 +3,7 @@
    Loaded only on event-detail.html.
    ========================================================= */
 
-/* Replace with your Paystack *test* public key from https://dashboard.paystack.com/#/settings/developer
-   Paid checkout will not open until this is a real pk_test_... key. See README.md. */
-const PAYSTACK_PUBLIC_KEY = 'pk_test_PASTE_YOUR_OWN_TEST_KEY_HERE';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_5bfe5d9c696924eb223b4a5eac855ca5272e79e3';
 
 const params = new URLSearchParams(window.location.search);
 const eventId = params.get('id');
@@ -236,6 +234,7 @@ if (payBtn) {
 const auth_state_cache = {};
 auth.onAuthStateChanged((user) => {
   if (user) {
+    if (checkoutEmail && user.email) checkoutEmail.value = user.email;
     db.collection('users').doc(user.uid).get().then((doc) => {
       auth_state_cache.attendeeName = (doc.exists && doc.data().name) ? doc.data().name : user.email;
     });

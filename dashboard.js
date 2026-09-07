@@ -87,6 +87,14 @@ function loadApplicationStatus() {
         document.getElementById('applyForm').style.display = 'none';
         document.getElementById('rejectedBanner').style.display = 'flex';
       }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.code === 'failed-precondition') {
+        showToast('Database index still building — check the console link, then refresh in ~1 min.');
+      } else {
+        showToast('Could not load your application status.');
+      }
     });
 }
 
@@ -153,6 +161,13 @@ function loadMyEvents() {
       noneEl.style.display = 'none';
       listEl.innerHTML = snap.docs.map(d => eventRowHTML(d.id, d.data())).join('');
       attachEventRowHandlers(snap.docs);
+    }, (err) => {
+      console.error(err);
+      if (err.code === 'failed-precondition') {
+        showToast('Database index still building — check the console link, then refresh in ~1 min.');
+      } else {
+        showToast('Could not load your events.');
+      }
     });
 }
 
@@ -313,5 +328,8 @@ function loadPendingRequests() {
           });
         };
       });
+    }, (err) => {
+      console.error(err);
+      showToast('Could not load pending requests.');
     });
 }

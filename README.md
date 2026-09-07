@@ -51,19 +51,13 @@ Nobody can approve organizers until one user is an admin.
 
 After that, students apply on the dashboard; you approve them in the same page; they become `organizer`.
 
-### 4. Paystack (paid events only)
+### 4. Paystack (paid events)
 
-Free tickets work without this. Paid checkout will not open until you add a key.
+A **test** public key is already in `detail.js`. Free tickets work without Paystack; paid checkout should open the Paystack test iframe.
 
-1. Create an account at [Paystack](https://dashboard.paystack.com).
-2. Settings → API Keys & Webhooks → copy the **Test Public Key** (`pk_test_...`).
-3. Paste it in `detail.js`:
+Use [Paystack test cards](https://paystack.com/docs/payments/test-payments/). There is **no server-side payment verification** — the client writes the registration after the browser callback. Fine for coursework; not for real money.
 
-```js
-const PAYSTACK_PUBLIC_KEY = 'pk_test_YOUR_REAL_KEY';
-```
-
-Use test mode and Paystack’s test cards for the demo. There is **no server-side payment verification** in this project — the client writes the registration after Paystack’s browser callback. Fine for coursework; not for real money.
+To switch accounts later, replace `PAYSTACK_PUBLIC_KEY` in `detail.js`.
 
 ### 5. Optional: host it
 
