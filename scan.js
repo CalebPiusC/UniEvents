@@ -1,7 +1,6 @@
 /* =========================================================
    QR Check-in Scanner — organizer/admin only.
-   Scans a ticket's QR code, looks it up in Firestore,
-   and marks it checked in (with duplicate-scan protection).
+   Camera scan + manual ticket-code entry.
    Loaded only on scan.html.
    ========================================================= */
 
@@ -31,34 +30,67 @@ auth.onAuthStateChanged((user) => {
 });
 
 const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
 const scanResult = document.getElementById('scanResult');
 const resultCard = document.getElementById('resultCard');
 const resultTitle = document.getElementById('resultTitle');
 const resultBody = document.getElementById('resultBody');
+const manualForm = document.getElementById('manualForm');
+const manualCode = document.getElementById('manualCode');
 
 startBtn.addEventListener('click', () => {
-  if (html5QrCode) return; // already running
+  if (html5QrCode) return;
   html5QrCode = new Html5Qrcode('reader');
   startBtn.style.display = 'none';
+  if (stopBtn) stopBtn.style.display = 'inline-block';
 
   html5QrCode.start(
     { facingMode: 'environment' },
     { fps: 10, qrbox: 250 },
     onScanSuccess,
-    () => { /* ignore per-frame "no code found" errors */ }
+    () => {}
   ).catch((err) => {
     console.error(err);
-    showToast('Could not access camera — check permissions.');
+    showToast('Could not access camera — check permissions, or type the code below.');
     startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+    html5QrCode = null;
   });
 });
 
-function onScanSuccess(decodedText) {
-  if (isProcessing) return; // ignore rapid repeat scans of the same frame
-  isProcessing = true;
-  html5QrCode.pause(true);
+if (stopBtn) {
+  stopBtn.addEventListener('click', () => {
+    if (!html5QrCode) return;
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      html5QrCode = null;
+      startBtn.style.display = 'inline-block';
+      stopBtn.style.display = 'none';
+    }).catch(() => {
+      html5QrCode = null;
+      startBtn.style.display = 'inline-block';
+      stopBtn.style.display = 'none';
+    });
+  });
+}
 
-  db.collection('registrations').where('ticketCode', '==', decodedText).limit(1).get()
+if (manualForm) {
+  manualForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = (manualCode.value || '').trim();
+    if (!code) return;
+    onScanSuccess(code);
+  });
+}
+
+function onScanSuccess(decodedText) {
+  if (isProcessing) return;
+  isProcessing = true;
+  if (html5QrCode && html5QrCode.pause) {
+    try { html5QrCode.pause(true); } catch (err) { /* not started */ }
+  }
+
+  db.collection('registrations').where('ticketCode', '==', decodedText.trim()).limit(1).get()
     .then((snap) => {
       if (snap.empty) {
         showResult('invalid', 'Invalid Ticket', 'This code doesn\'t match any registration.');
@@ -68,7 +100,7 @@ function onScanSuccess(decodedText) {
       const reg = doc.data();
 
       if (reg.checkedIn) {
-        showResult('warning', 'Already Checked In', reg.attendeeName + ' — ' + reg.eventTitle);
+        showResult('warning', 'Already Checked In', (reg.attendeeName || '') + ' — ' + (reg.eventTitle || ''));
         return;
       }
 
@@ -76,7 +108,7 @@ function onScanSuccess(decodedText) {
         checkedIn: true,
         checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        showResult('success', 'Checked In ✓', reg.attendeeName + ' — ' + reg.eventTitle);
+        showResult('success', 'Checked In ✓', (reg.attendeeName || '') + ' — ' + (reg.eventTitle || ''));
       });
     })
     .catch((err) => {
@@ -96,6 +128,8 @@ function showResult(type, title, body) {
   setTimeout(() => {
     scanResult.style.display = 'none';
     isProcessing = false;
-    if (html5QrCode) html5QrCode.resume();
+    if (html5QrCode && html5QrCode.resume) {
+      try { html5QrCode.resume(); } catch (err) { /* stopped */ }
+    }
   }, 2500);
 }

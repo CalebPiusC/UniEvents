@@ -65,6 +65,8 @@ function renderForRole() {
   if (role === 'admin') {
     adminSection.style.display = 'block';
     loadPendingRequests();
+    const seedBtn = document.getElementById('seedBtn');
+    if (seedBtn) seedBtn.style.display = 'inline-block';
   }
 }
 
@@ -133,15 +135,19 @@ document.getElementById('applySubmit').addEventListener('click', () => {
 let editingEventId = null;
 
 function eventRowHTML(id, ev) {
+  const published = ev.published !== false;
   return `
     <div class="dash-event-row" data-id="${id}">
       <div>
-        <div class="ename">${ev.title}</div>
-        <div class="emeta">${ev.date || ''} · ${ev.venue || ''} · ${(ev.registeredCount||0)}/${ev.capacity||0} registered</div>
+        <div class="ename">${escapeHtml(ev.title)} ${published ? '' : '<span class="stat-pill">DRAFT</span>'}</div>
+        <div class="emeta">${escapeHtml(ev.date || '')} · ${escapeHtml(ev.venue || '')} · ${(ev.registeredCount||0)}/${ev.capacity||0} registered</div>
       </div>
       <div class="dash-event-actions">
         <span class="stat-pill">${formatNaira((ev.price||0) * (ev.registeredCount||0))} collected</span>
-        <button class="dash-btn" data-action="registrants" data-id="${id}" data-title="${ev.title}">Registrants</button>
+        <button class="dash-btn" data-action="copy" data-id="${id}">Copy link</button>
+        <button class="dash-btn" data-action="registrants" data-id="${id}" data-title="${escapeHtml(ev.title)}">Registrants</button>
+        <button class="dash-btn" data-action="duplicate" data-id="${id}">Duplicate</button>
+        <button class="dash-btn" data-action="publish" data-id="${id}">${published ? 'Unpublish' : 'Publish'}</button>
         <button class="dash-btn" data-action="edit" data-id="${id}">Edit</button>
         <button class="dash-btn danger" data-action="delete" data-id="${id}">Delete</button>
       </div>
@@ -149,8 +155,12 @@ function eventRowHTML(id, ev) {
 }
 
 function loadMyEvents() {
-  db.collection('events').where('createdBy', '==', currentUserId).orderBy('createdAt', 'desc')
-    .onSnapshot((snap) => {
+  const role = currentUserDoc.role || 'student';
+  const query = role === 'admin'
+    ? db.collection('events').orderBy('createdAt', 'desc')
+    : db.collection('events').where('createdBy', '==', currentUserId).orderBy('createdAt', 'desc');
+
+  query.onSnapshot((snap) => {
       const listEl = document.getElementById('myEventsList');
       const noneEl = document.getElementById('noEventsYet');
       if (snap.empty) {
@@ -188,6 +198,55 @@ function attachEventRowHandlers(docs) {
   document.querySelectorAll('[data-action="registrants"]').forEach(btn => {
     btn.onclick = () => openRegistrants(btn.dataset.id, btn.dataset.title);
   });
+  document.querySelectorAll('[data-action="copy"]').forEach(btn => {
+    btn.onclick = () => {
+      const url = new URL('event-detail.html?id=' + encodeURIComponent(btn.dataset.id), window.location.href).href;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('Event link copied.')).catch(() => prompt('Copy this link:', url));
+      } else {
+        prompt('Copy this link:', url);
+      }
+    };
+  });
+  document.querySelectorAll('[data-action="publish"]').forEach(btn => {
+    btn.onclick = () => {
+      const doc = docs.find(d => d.id === btn.dataset.id);
+      if (!doc) return;
+      const next = doc.data().published === false;
+      db.collection('events').doc(doc.id).update({ published: next }).then(() => {
+        showToast(next ? 'Published to Browse Events.' : 'Moved to draft.');
+      });
+    };
+  });
+  document.querySelectorAll('[data-action="duplicate"]').forEach(btn => {
+    btn.onclick = () => {
+      const doc = docs.find(d => d.id === btn.dataset.id);
+      if (!doc) return;
+      const ev = doc.data();
+      db.collection('events').add({
+        title: (ev.title || 'Event') + ' (copy)',
+        category: ev.category || 'academic',
+        isoDate: ev.isoDate || '',
+        date: ev.date || '',
+        dateBadgeMonth: ev.dateBadgeMonth || '',
+        dateBadgeDay: ev.dateBadgeDay || '',
+        time: ev.time || '',
+        venue: ev.venue || '',
+        host: ev.host || '',
+        price: ev.price || 0,
+        capacity: ev.capacity || 50,
+        description: ev.description || '',
+        whatToExpect: Array.isArray(ev.whatToExpect) ? ev.whatToExpect : [],
+        imageUrl: ev.imageUrl || eventCoverUrl(ev),
+        icon: ev.icon || 'calendar-star',
+        colorVariant: ev.colorVariant || 'a',
+        registeredCount: 0,
+        published: false,
+        createdBy: currentUserId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => showToast('Draft copy created.'));
+    };
+  });
 }
 
 // ---- Create/Edit modal ----
@@ -208,6 +267,8 @@ function openEventModal(id, ev) {
   document.getElementById('fCapacity').value = ev ? ev.capacity : 50;
   document.getElementById('fDescription').value = ev ? ev.description : '';
   document.getElementById('fExpect').value = ev && Array.isArray(ev.whatToExpect) ? ev.whatToExpect.join('\n') : '';
+  document.getElementById('fImageUrl').value = ev && ev.imageUrl && isSafeHttpUrl(ev.imageUrl) ? ev.imageUrl : '';
+  document.getElementById('fPublished').checked = !ev || ev.published !== false;
   document.getElementById('eventFormError').classList.remove('show');
   eventModalOverlay.classList.add('open');
 }
@@ -223,6 +284,8 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
   const capacity = parseInt(document.getElementById('fCapacity').value, 10) || 1;
   const description = document.getElementById('fDescription').value.trim();
   const whatToExpect = document.getElementById('fExpect').value.split('\n').map(s => s.trim()).filter(Boolean);
+  const imageUrlInput = document.getElementById('fImageUrl').value.trim();
+  const published = document.getElementById('fPublished').checked;
   const errEl = document.getElementById('eventFormError');
 
   if (!title || !isoDate || !venue || !time) {
@@ -230,14 +293,20 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
     errEl.classList.add('show');
     return;
   }
+  if (imageUrlInput && !isSafeHttpUrl(imageUrlInput)) {
+    errEl.textContent = 'Cover image must be a valid http(s) URL, or leave it blank for the sample photo.';
+    errEl.classList.add('show');
+    return;
+  }
   errEl.classList.remove('show');
 
   const { date, dateBadgeMonth, dateBadgeDay } = deriveDateFields(isoDate);
   const style = CATEGORY_STYLE[category] || CATEGORY_STYLE.academic;
+  const imageUrl = imageUrlInput || (CATEGORY_COVERS[category] || CATEGORY_COVERS.academic);
 
   const payload = {
     title, category, isoDate, date, dateBadgeMonth, dateBadgeDay, time, venue, host,
-    price, capacity, description, whatToExpect,
+    price, capacity, description, whatToExpect, imageUrl, published,
     icon: style.icon, colorVariant: style.colorVariant
   };
 
@@ -259,9 +328,12 @@ document.getElementById('eventFormSubmit').addEventListener('click', () => {
 const registrantsOverlay = document.getElementById('registrantsOverlay');
 document.getElementById('registrantsClose').addEventListener('click', () => registrantsOverlay.classList.remove('open'));
 
+let csvRows = [];
+
 function openRegistrants(eventId, title) {
   document.getElementById('registrantsTitle').textContent = 'Registrants — ' + title;
   registrantsOverlay.classList.add('open');
+  csvRows = [['Name', 'Ticket code', 'Quantity', 'Amount paid', 'Checked in', 'Registered at']];
 
   db.collection('registrations').where('eventId', '==', eventId).get().then((snap) => {
     const listEl = document.getElementById('registrantsList');
@@ -275,10 +347,136 @@ function openRegistrants(eventId, title) {
       listEl.innerHTML = snap.docs.map(d => {
         const r = d.data();
         total += r.amountPaid || 0;
-        return `<div class="registrant-row"><span class="rn">${r.attendeeName || ''} ${r.checkedIn ? '✓' : ''}</span><span class="rc">${r.ticketCode}</span></div>`;
+        const when = r.registeredAt && r.registeredAt.toDate ? r.registeredAt.toDate().toISOString() : '';
+        csvRows.push([
+          r.attendeeName || '',
+          r.ticketCode || '',
+          r.quantity || 1,
+          r.amountPaid || 0,
+          r.checkedIn ? 'yes' : 'no',
+          when
+        ]);
+        return `<div class="registrant-row"><span class="rn">${escapeHtml(r.attendeeName || '')} ${r.checkedIn ? '✓' : ''}</span><span class="rc">${escapeHtml(r.ticketCode)}</span></div>`;
       }).join('');
     }
     document.getElementById('totalCollected').textContent = formatNaira(total) + ' collected';
+  });
+
+  const waitEl = document.getElementById('waitlistList');
+  const noWait = document.getElementById('noWaitlist');
+  db.collection('waitlist').where('eventId', '==', eventId).get().then((snap) => {
+    if (!waitEl) return;
+    if (snap.empty) {
+      waitEl.innerHTML = '';
+      if (noWait) noWait.style.display = 'block';
+      return;
+    }
+    if (noWait) noWait.style.display = 'none';
+    waitEl.innerHTML = snap.docs.map(d => {
+      const w = d.data();
+      return `<div class="registrant-row"><span class="rn">${escapeHtml(w.userName || w.userEmail || '')}</span><span class="rc">waiting</span></div>`;
+    }).join('');
+  }).catch((err) => console.error(err));
+}
+
+const csvExportBtn = document.getElementById('csvExportBtn');
+if (csvExportBtn) {
+  csvExportBtn.addEventListener('click', () => {
+    if (csvRows.length <= 1) {
+      showToast('No registrants to export yet.');
+      return;
+    }
+    const body = csvRows.map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const blob = new Blob([body], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'unievents-registrants.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
+const DEMO_EVENTS = [
+  {
+    seedId: 'demo-careers',
+    title: 'Careers & Tech Fair',
+    category: 'academic',
+    isoDate: '2026-09-18',
+    time: '10:00 AM – 4:00 PM',
+    venue: 'Oduduwa Hall',
+    host: 'OAU Career Services',
+    price: 0,
+    capacity: 400,
+    description: 'Meet recruiters, walk through live demos, and drop your CV with companies hiring OAU students this session.',
+    whatToExpect: ['40+ exhibitors', 'CV clinic', 'Panel on internships'],
+    imageUrl: 'images/academic.jpg'
+  },
+  {
+    seedId: 'demo-football',
+    title: 'Inter-Faculty Football Final',
+    category: 'sports',
+    isoDate: '2026-09-20',
+    time: '4:00 PM',
+    venue: 'Sports Complex',
+    host: 'OAU Sports Council',
+    price: 500,
+    capacity: 800,
+    description: 'The two remaining faculties meet under the lights. Bring your scarf — gates open at 3.',
+    whatToExpect: ['Student bands', 'Halftime challenge', 'QR check-in at the gate'],
+    imageUrl: 'images/sports.jpg'
+  },
+  {
+    seedId: 'demo-seminar',
+    title: 'SEN Research Seminar',
+    category: 'academic',
+    isoDate: '2026-09-16',
+    time: '2:00 – 4:00 PM',
+    venue: 'Computer Building LT',
+    host: 'Department of Computer Science & Engineering',
+    price: 0,
+    capacity: 80,
+    description: 'Final-year students present ongoing work. Open to the faculty — no registration wall to browse, ticket at the door.',
+    whatToExpect: ['Lightning talks', 'Poster session', 'Tea after'],
+    imageUrl: 'images/academic.jpg'
+  }
+];
+
+const seedBtn = document.getElementById('seedBtn');
+if (seedBtn) {
+  seedBtn.addEventListener('click', () => {
+    seedBtn.disabled = true;
+    db.collection('events').where('seedId', 'in', DEMO_EVENTS.map(e => e.seedId)).get()
+      .then((snap) => {
+        const have = {};
+        snap.docs.forEach(d => { have[d.data().seedId] = true; });
+        const missing = DEMO_EVENTS.filter(e => !have[e.seedId]);
+        if (missing.length === 0) {
+          showToast('Demo events are already loaded.');
+          return;
+        }
+        const batch = db.batch();
+        missing.forEach((ev) => {
+          const { date, dateBadgeMonth, dateBadgeDay } = deriveDateFields(ev.isoDate);
+          const style = CATEGORY_STYLE[ev.category] || CATEGORY_STYLE.academic;
+          const ref = db.collection('events').doc();
+          batch.set(ref, {
+            ...ev,
+            date, dateBadgeMonth, dateBadgeDay,
+            icon: style.icon,
+            colorVariant: style.colorVariant,
+            registeredCount: 0,
+            published: true,
+            createdBy: currentUserId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        return batch.commit().then(() => showToast('Added ' + missing.length + ' demo event(s).'));
+      })
+      .catch((err) => {
+        console.error(err);
+        showToast('Could not load demo events — check the console.');
+      })
+      .finally(() => { seedBtn.disabled = false; });
   });
 }
 
@@ -288,9 +486,9 @@ function openRegistrants(eventId, title) {
 function requestRowHTML(id, req) {
   return `
     <div class="req-row" data-id="${id}">
-      <div class="rname">${req.userName || req.userEmail}</div>
-      <div class="rdept">${req.department}</div>
-      <div class="rquote">"${req.justification}"</div>
+      <div class="rname">${escapeHtml(req.userName || req.userEmail)}</div>
+      <div class="rdept">${escapeHtml(req.department)}</div>
+      <div class="rquote">"${escapeHtml(req.justification)}"</div>
       <div class="req-actions">
         <button class="dash-btn solid" data-action="approve" data-id="${id}" data-user="${req.userId}">Approve</button>
         <button class="dash-btn danger" data-action="reject" data-id="${id}">Reject</button>

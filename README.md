@@ -59,27 +59,80 @@ Use [Paystack test cards](https://paystack.com/docs/payments/test-payments/). Th
 
 To switch accounts later, replace `PAYSTACK_PUBLIC_KEY` in `detail.js`.
 
-### 5. Optional: host it
+### 5. Host it (public demo URL)
+
+**Netlify (easiest, free)**
+
+1. Push this branch to GitHub.
+2. [app.netlify.com](https://app.netlify.com) → **Add new site** → **Import from Git** → this repo.
+3. Branch: `arena/01a07ba1-unievents` (or `main` if you merge first).
+4. Publish directory: `.`  (leave build command empty).
+5. Deploy. You’ll get a URL like `https://something.netlify.app`.
+6. Firebase Console → Authentication → Settings → **Authorized domains** → add `something.netlify.app` (no `https://`).
+
+Without step 6, login/signup will fail on the live site.
+
+**WhatsApp preview:** after the site is live, paste the Netlify URL into [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) → **Scrape Again**. WhatsApp caches the old empty preview until that (or until you wait a while and send the link in a **new** chat). To use your live image instead of GitHub, set `og:image` in the HTML to `https://YOUR-SITE.netlify.app/images/og.jpg`.
+
+**Firebase Hosting (optional)**
 
 ```bash
 firebase deploy --only hosting
 ```
 
-`firebase.json` already points hosting at this folder.
+You’ll get something like `https://unievents-c7c44.web.app`. Add that domain under Authorized domains too.
 
-### 6. Contact inbox
+### 6. Storage (cover photo uploads)
+
+Console → **Build → Storage → Get started**, then:
+
+```bash
+firebase deploy --only storage
+```
+
+Without this, organizers can still paste an image URL.
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes,storage,hosting
+```
+
+deploys everything in one go.
+
+### 7. Contact inbox
 
 `contact.js` uses `unievents.group5@gmail.com`. Change `CONTACT_TO` to a real group address if you want replies.
 
 ---
+
+## Extra features
+
+- **Saved events** — heart on event detail; **Saved** chip on Browse
+- **Upcoming / Past** filters
+- **Category sample photos** (academic / social / sports / food) — no paid Storage. Optional URL override.
+- **Draft vs published**, **Duplicate event**, **Load demo events** (admin)
+- **Waitlist** when an event is full
+- **Download registrants CSV**
+- **Reviews** (1–5 stars) on event detail
+- **Forgot password** on the login page
+- **Print ticket**, **Add to calendar**, **Cancel registration** (if not checked in)
+- **Manual ticket code** on the scanner if the camera fails
+- Admins see **all events** and can copy an event link
+
+Redeploy rules after pulling this version:
+
+```bash
+firebase deploy --only firestore:rules
+```
 
 ## Demo path (once 1–3 are done)
 
 1. Sign up as a student → Browse → register for a **free** event → My Tickets → QR.
 2. Dashboard → apply to organize.
 3. Log in as the **admin** → approve the request.
-4. Log back in as the organizer → **+ New Event**.
-5. Dashboard → **Scan Tickets** → scan the QR.
+4. Log in as the **admin** → **Load demo events** (or create your own) → approve organizer requests.
+5. Organizer → **+ New Event**, or **Duplicate**.
+6. Dashboard → **Scan Tickets** → scan the QR.
+7. Full event → student taps **Join waitlist**. Registrants modal has **Download CSV**.
 
 ## Collections
 
@@ -89,3 +142,4 @@ firebase deploy --only hosting
 | `events` | Listings created by organizers |
 | `registrations` | Tickets (`ticketCode`, `checkedIn`) |
 | `organizerRequests` | Apply-to-organize queue |
+| `waitlist` | Students waiting on a full event |

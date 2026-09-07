@@ -1,47 +1,74 @@
 /* =========================================================
-   Ticket page — loads the real registration by ?code= from
-   Firestore and renders a QR code that actually encodes the
-   ticket code (so a real scanner could read it later).
+   Ticket page — loads the registration by ?id= (preferred)
+   or ?code= from Firestore and renders a QR code.
    Loaded only on ticket.html.
    ========================================================= */
 
 const ticketParams = new URLSearchParams(window.location.search);
+const ticketIdParam = ticketParams.get('id');
 const ticketCodeParam = ticketParams.get('code');
 
 const ticketLoading = document.getElementById('ticketLoading');
 const ticketNotFound = document.getElementById('ticketNotFound');
 const ticketCard = document.getElementById('ticketCard');
 
-function loadTicket() {
-  if (!auth.currentUser) {
+let currentReg = null;
+let currentRegRef = null;
+
+function showNotFound() {
+  ticketLoading.style.display = 'none';
+  ticketNotFound.style.display = 'block';
+  ticketCard.style.display = 'none';
+}
+
+function applyRegistration(doc) {
+  currentRegRef = doc.ref;
+  currentReg = doc.data();
+  ticketLoading.style.display = 'none';
+  ticketNotFound.style.display = 'none';
+  renderTicket(currentReg);
+}
+
+function loadTicket(user) {
+  if (!user) {
     sessionStorage.setItem('redirectAfterLogin', window.location.href);
     window.location.href = 'login.html';
     return;
   }
-  if (!ticketCodeParam) {
-    ticketLoading.style.display = 'none';
-    ticketNotFound.style.display = 'block';
+  if (!ticketIdParam && !ticketCodeParam) {
+    showNotFound();
     return;
   }
 
-  db.collection('registrations')
-    .where('userId', '==', auth.currentUser.uid)
-    .where('ticketCode', '==', ticketCodeParam)
-    .limit(1)
-    .get()
-    .then((snapshot) => {
-      ticketLoading.style.display = 'none';
-      if (snapshot.empty) {
-        ticketNotFound.style.display = 'block';
-        return;
-      }
-      renderTicket(snapshot.docs[0].data());
-    })
-    .catch((err) => {
-      console.error(err);
-      ticketLoading.style.display = 'none';
-      ticketNotFound.style.display = 'block';
-    });
+  const byId = ticketIdParam
+    ? db.collection('registrations').doc(ticketIdParam).get().then((doc) => {
+        if (doc.exists && doc.data().userId === user.uid) return doc;
+        return null;
+      })
+    : Promise.resolve(null);
+
+  byId.then((doc) => {
+    if (doc) {
+      applyRegistration(doc);
+      return null;
+    }
+    if (!ticketCodeParam) {
+      showNotFound();
+      return null;
+    }
+    return db.collection('registrations').where('userId', '==', user.uid).get();
+  }).then((snapshot) => {
+    if (!snapshot) return;
+    const match = snapshot.docs.find((d) => d.data().ticketCode === ticketCodeParam);
+    if (!match) {
+      showNotFound();
+      return;
+    }
+    applyRegistration(match);
+  }).catch((err) => {
+    console.error(err);
+    showNotFound();
+  });
 }
 
 function renderTicket(reg) {
@@ -53,6 +80,9 @@ function renderTicket(reg) {
   document.getElementById('ticketAttendee').textContent = reg.attendeeName || '';
   document.getElementById('ticketCodeText').textContent = reg.ticketCode || '';
 
+  const qtyEl = document.getElementById('ticketQty');
+  if (qtyEl) qtyEl.textContent = String(reg.quantity || 1);
+
   const stamp = document.getElementById('ticketStamp');
   if (reg.checkedIn) {
     stamp.textContent = 'USED';
@@ -60,19 +90,31 @@ function renderTicket(reg) {
     stamp.style.borderColor = 'var(--dim)';
   }
 
-  // Real QR code, encoding the real ticket code
-  const qr = qrcode(0, 'M');
-  qr.addData(reg.ticketCode || '');
-  qr.make();
-  document.getElementById('qrCodeWrap').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+  if (typeof qrcode === 'function') {
+    const qr = qrcode(0, 'M');
+    qr.addData(reg.ticketCode || '');
+    qr.make();
+    document.getElementById('qrCodeWrap').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+  }
 
   ticketCard.style.display = 'block';
+
+  if (reg.eventId) {
+    db.collection('events').doc(reg.eventId).get().then((doc) => {
+      const photo = document.getElementById('ticketPhoto');
+      if (!photo || !doc.exists) return;
+      photo.innerHTML = coverImgHTML(doc.data(), doc.data().title || reg.eventTitle);
+    }).catch((err) => console.error(err));
+  }
+
+  const cancelBtn = document.getElementById('cancelTicketBtn');
+  if (cancelBtn) {
+    cancelBtn.style.display = reg.checkedIn ? 'none' : 'inline-block';
+  }
 }
 
-// Wait for auth state to resolve before loading (so we know if a user is logged in)
-auth.onAuthStateChanged(() => loadTicket());
+auth.onAuthStateChanged((user) => loadTicket(user));
 
-// Image / QR toggle
 const imageBtn = document.getElementById('imageBtn');
 const qrBtn = document.getElementById('qrBtn');
 const imagePanel = document.getElementById('imagePanel');
@@ -90,5 +132,64 @@ if (imageBtn && qrBtn) {
     imageBtn.classList.replace('solid', 'ghost');
     qrPanel.classList.add('active');
     imagePanel.classList.remove('active');
+  });
+}
+
+const printBtn = document.getElementById('printTicketBtn');
+if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+const calBtn = document.getElementById('calendarBtn');
+if (calBtn) {
+  calBtn.addEventListener('click', () => {
+    if (!currentReg) return;
+    const day = (currentReg.eventIsoDate || '').replace(/-/g, '');
+    const dt = day && day.length === 8 ? day : '';
+    const summary = (currentReg.eventTitle || 'UniEvents').replace(/[,\\;]/g, ' ');
+    const loc = (currentReg.eventVenue || '').replace(/[,\\;]/g, ' ');
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//UniEvents//EN',
+      'BEGIN:VEVENT',
+      'SUMMARY:' + summary,
+      dt ? ('DTSTART;VALUE=DATE:' + dt) : '',
+      'LOCATION:' + loc,
+      'DESCRIPTION:Ticket ' + (currentReg.ticketCode || ''),
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'unievents-ticket.ics';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
+const cancelBtn = document.getElementById('cancelTicketBtn');
+if (cancelBtn) {
+  cancelBtn.addEventListener('click', () => {
+    if (!currentReg || !currentRegRef || currentReg.checkedIn) return;
+    if (!confirm('Cancel this registration? Your spot will be released.')) return;
+
+    const eventRef = db.collection('events').doc(currentReg.eventId);
+    const qty = currentReg.quantity || 1;
+
+    db.runTransaction((t) => {
+      return t.get(eventRef).then((doc) => {
+        if (doc.exists) {
+          const next = Math.max(0, (doc.data().registeredCount || 0) - qty);
+          t.update(eventRef, { registeredCount: next });
+        }
+        t.delete(currentRegRef);
+      });
+    }).then(() => {
+      showToast('Registration cancelled.');
+      window.location.href = 'my-tickets.html';
+    }).catch((err) => {
+      console.error(err);
+      showToast('Could not cancel — try again.');
+    });
   });
 }

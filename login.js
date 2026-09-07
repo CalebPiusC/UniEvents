@@ -5,6 +5,7 @@
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 const loginSubmit = document.getElementById('loginSubmit');
+const forgotBtn = document.getElementById('forgotBtn');
 
 function showLoginError(msg) {
   loginError.textContent = msg;
@@ -44,6 +45,27 @@ if (loginForm) {
         showLoginError(friendlyLoginError(err.code));
         loginSubmit.disabled = false;
         loginSubmit.textContent = 'Log In';
+      });
+  });
+}
+
+if (forgotBtn) {
+  forgotBtn.addEventListener('click', () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    loginError.classList.remove('show');
+    if (!email) {
+      showLoginError('Enter your email above, then tap Forgot password.');
+      return;
+    }
+    forgotBtn.disabled = true;
+    auth.sendPasswordResetEmail(email)
+      .then(() => {
+        showToast('Password reset email sent — check your inbox.');
+        forgotBtn.disabled = false;
+      })
+      .catch((err) => {
+        showLoginError(friendlyLoginError(err.code));
+        forgotBtn.disabled = false;
       });
   });
 }

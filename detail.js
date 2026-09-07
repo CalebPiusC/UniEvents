@@ -67,9 +67,19 @@ function renderEvent() {
   document.getElementById('detailDescription').textContent = ev.description || '';
   document.getElementById('priceTagDisplay').textContent = (ev.price && ev.price > 0) ? formatNaira(ev.price) : 'Free';
 
+  const hero = document.querySelector('.detail-hero');
+  if (hero) {
+    const oldCover = hero.querySelector('.cover-img');
+    if (oldCover) oldCover.remove();
+    ['cover-academic', 'cover-social', 'cover-sports', 'cover-food'].forEach((c) => hero.classList.remove(c));
+    const cat = CATEGORY_COVERS[ev.category] ? ev.category : 'academic';
+    hero.classList.add('cover-' + cat);
+    hero.style.backgroundImage = '';
+  }
+
   if (Array.isArray(ev.whatToExpect) && ev.whatToExpect.length > 0) {
     document.getElementById('expectHeading').style.display = 'block';
-    document.getElementById('expectList').innerHTML = ev.whatToExpect.map(item => `<li>${item}</li>`).join('');
+    document.getElementById('expectList').innerHTML = ev.whatToExpect.map(item => `<li>${escapeHtml(item)}</li>`).join('');
   }
 
   const capacity = ev.capacity || 0;
@@ -88,13 +98,22 @@ function renderEvent() {
   }, 20);
 
   registerBtn.textContent = (ev.price && ev.price > 0) ? 'Buy Ticket — ' + formatNaira(ev.price) : 'Get a Ticket';
-  if (registered >= capacity && capacity > 0) {
-    registerBtn.textContent = 'Event Full';
+  registerBtn.disabled = false;
+  registerBtn.dataset.mode = 'register';
+  if (isPastEvent(ev)) {
+    registerBtn.textContent = 'This event has ended';
     registerBtn.disabled = true;
+    registerBtn.dataset.mode = 'ended';
+  } else if (registered >= capacity && capacity > 0) {
+    registerBtn.textContent = 'Join waitlist';
+    registerBtn.disabled = false;
+    registerBtn.dataset.mode = 'waitlist';
   }
 
   detailMain.style.display = 'block';
   stickyCta.style.display = 'flex';
+  loadReviews();
+  refreshWaitlistButton();
 }
 
 // ---- Share this event ----
@@ -121,14 +140,38 @@ if (shareBtn) {
   });
 }
 
-// ---- Heart toggle ----
+// ---- Heart toggle (saved to the user document) ----
 const heartBtn = document.getElementById('heartBtn');
+function setHeartUI(on) {
+  if (!heartBtn) return;
+  heartBtn.classList.toggle('active', on);
+  const icon = heartBtn.querySelector('i');
+  if (!icon) return;
+  icon.classList.toggle('fa-solid', on);
+  icon.classList.toggle('fa-regular', !on);
+}
+
 if (heartBtn) {
   heartBtn.addEventListener('click', () => {
-    heartBtn.classList.toggle('active');
-    const icon = heartBtn.querySelector('i');
-    icon.classList.toggle('fa-regular');
-    icon.classList.toggle('fa-solid');
+    if (!auth.currentUser) {
+      sessionStorage.setItem('redirectAfterLogin', window.location.href);
+      window.location.href = 'login.html';
+      return;
+    }
+    if (!eventId) return;
+    const userRef = db.collection('users').doc(auth.currentUser.uid);
+    const already = heartBtn.classList.contains('active');
+    userRef.update({
+      favorites: already
+        ? firebase.firestore.FieldValue.arrayRemove(eventId)
+        : firebase.firestore.FieldValue.arrayUnion(eventId)
+    }).then(() => {
+      setHeartUI(!already);
+      showToast(already ? 'Removed from saved' : 'Saved to your list');
+    }).catch((err) => {
+      console.error(err);
+      showToast('Could not update saved events.');
+    });
   });
 }
 
@@ -159,6 +202,41 @@ function openCheckoutOrRegister() {
   }
 }
 
+function refreshWaitlistButton() {
+  if (!auth.currentUser || !eventId || !registerBtn) return;
+  if (registerBtn.dataset.mode !== 'waitlist' && registerBtn.dataset.mode !== 'waiting') return;
+  db.collection('waitlist')
+    .where('userId', '==', auth.currentUser.uid)
+    .where('eventId', '==', eventId)
+    .limit(1)
+    .get()
+    .then((snap) => {
+      if (!snap.empty) {
+        registerBtn.textContent = 'You’re on the waitlist';
+        registerBtn.disabled = true;
+        registerBtn.dataset.mode = 'waiting';
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function joinWaitlist() {
+  db.collection('waitlist').add({
+    userId: auth.currentUser.uid,
+    eventId: eventId,
+    eventTitle: currentEvent.title || '',
+    userName: auth_state_cache.attendeeName || auth.currentUser.email,
+    userEmail: auth.currentUser.email || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showToast('You’re on the waitlist. If a spot opens, register from this page.');
+    refreshWaitlistButton();
+  }).catch((err) => {
+    console.error(err);
+    showToast('Could not join the waitlist.');
+  });
+}
+
 if (registerBtn) {
   registerBtn.addEventListener('click', () => {
     if (!currentEvent) return;
@@ -169,6 +247,12 @@ if (registerBtn) {
       window.location.href = 'login.html';
       return;
     }
+
+    if (registerBtn.dataset.mode === 'waitlist') {
+      joinWaitlist();
+      return;
+    }
+    if (registerBtn.dataset.mode === 'ended' || registerBtn.dataset.mode === 'waiting') return;
 
     db.collection('registrations')
       .where('userId', '==', auth.currentUser.uid)
@@ -236,14 +320,20 @@ auth.onAuthStateChanged((user) => {
   if (user) {
     if (checkoutEmail && user.email) checkoutEmail.value = user.email;
     db.collection('users').doc(user.uid).get().then((doc) => {
-      auth_state_cache.attendeeName = (doc.exists && doc.data().name) ? doc.data().name : user.email;
+      const data = doc.exists ? doc.data() : {};
+      auth_state_cache.attendeeName = data.name || user.email;
+      const favs = Array.isArray(data.favorites) ? data.favorites : [];
+      setHeartUI(!!eventId && favs.indexOf(eventId) !== -1);
+      refreshWaitlistButton();
     });
+  } else {
+    setHeartUI(false);
   }
 });
 
 function completeRegistration(paymentRef) {
   const user = auth.currentUser;
-  const ticketCode = 'EVT-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 5).toUpperCase();
+  const ticketCode = makeTicketCode();
   const eventRef = db.collection('events').doc(eventId);
   const regRef = db.collection('registrations').doc();
 
@@ -263,6 +353,7 @@ function completeRegistration(paymentRef) {
         eventDate: data.date || '',
         eventTime: data.time || '',
         eventVenue: data.venue || '',
+        eventIsoDate: data.isoDate || '',
         attendeeName: auth_state_cache.attendeeName || user.email,
         ticketCode: ticketCode,
         quantity: qty,
@@ -275,7 +366,7 @@ function completeRegistration(paymentRef) {
   }).then(() => {
     successMessage.textContent = 'Your ticket for ' + currentEvent.title + ' has been added to My Tickets, with a QR code ready to scan at the door.';
     refDisplay.textContent = 'Ticket code: ' + ticketCode;
-    viewTicketLink.href = 'ticket.html?code=' + ticketCode;
+    viewTicketLink.href = 'ticket.html?code=' + encodeURIComponent(ticketCode);
     modalOverlay.classList.add('open');
   }).catch((err) => {
     alert(err.message || 'Something went wrong completing your registration.');

@@ -10,29 +10,11 @@ const noResults = document.getElementById('noResults');
 const chips = document.querySelectorAll('.chip');
 const searchInput = document.getElementById('searchInput');
 
-let allEvents = []; // populated live from Firestore
-
-function formatNaira(n) {
-  return '₦' + n.toLocaleString('en-NG');
-}
+let allEvents = [];
+let favorites = [];
 
 function cardHTML(id, ev) {
-  const spotsLeft = (ev.capacity || 0) - (ev.registeredCount || 0);
-  const priceLabel = (ev.price && ev.price > 0)
-    ? formatNaira(ev.price)
-    : (ev.registeredCount || 0) + '/' + (ev.capacity || 0);
-
-  return `
-    <a class="event-card" data-category="${ev.category || 'academic'}" href="event-detail.html?id=${id}">
-      <div class="event-photo ${ev.colorVariant || 'a'}">
-        <i class="fa-solid fa-${ev.icon || 'calendar-star'}"></i>
-        <span class="date-badge">${ev.dateBadgeMonth || ''}<br>${ev.dateBadgeDay || ''}</span>
-      </div>
-      <div class="event-info">
-        <div><h5>${ev.title || 'Untitled event'}</h5><p>${ev.venue || ''} · ${ev.time || ''}</p></div>
-        <span class="price-pill">${priceLabel}</span>
-      </div>
-    </a>`;
+  return eventCardHTML(id, ev, favorites);
 }
 
 function render() {
@@ -40,11 +22,22 @@ function render() {
   const category = activeChip ? activeChip.dataset.filter : 'all';
   const query = searchInput.value.trim().toLowerCase();
 
+  if (category === 'saved' && !auth.currentUser) {
+    sessionStorage.setItem('redirectAfterLogin', 'browse.html');
+    window.location.href = 'login.html';
+    return;
+  }
+
   const filtered = allEvents.filter(ev => {
-    const matchesCategory = category === 'all' || ev.category === category;
+    if (ev.published === false) return false;
     const haystack = ((ev.title || '') + ' ' + (ev.venue || '') + ' ' + (ev.host || '')).toLowerCase();
     const matchesSearch = query === '' || haystack.includes(query);
-    return matchesCategory && matchesSearch;
+    let matchesChip = true;
+    if (category === 'saved') matchesChip = favorites.indexOf(ev.id) !== -1;
+    else if (category === 'upcoming') matchesChip = !isPastEvent(ev);
+    else if (category === 'past') matchesChip = isPastEvent(ev);
+    else matchesChip = category === 'all' || ev.category === category;
+    return matchesChip && matchesSearch;
   });
 
   eventGrid.innerHTML = filtered.map(ev => cardHTML(ev.id, ev)).join('');
@@ -61,7 +54,6 @@ function render() {
   }
 }
 
-// Real-time listener — if an organizer creates an event, this page updates live, no refresh needed
 db.collection('events').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
   loadingState.style.display = 'none';
   allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -69,6 +61,18 @@ db.collection('events').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
 }, (err) => {
   loadingState.textContent = 'Could not load events — check your Firestore rules and connection.';
   console.error(err);
+});
+
+auth.onAuthStateChanged((user) => {
+  if (!user) {
+    favorites = [];
+    render();
+    return;
+  }
+  db.collection('users').doc(user.uid).onSnapshot((doc) => {
+    favorites = (doc.exists && Array.isArray(doc.data().favorites)) ? doc.data().favorites : [];
+    render();
+  });
 });
 
 chips.forEach(chip => {

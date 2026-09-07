@@ -2,12 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Event Details — UniEvents</title>
+<!-- social preview: WhatsApp/iMessage need an absolute image URL.
+     After Netlify deploy, you can change og:image to https://YOUR-SITE.netlify.app/images/og.jpg -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="UniEvents">
+<meta property="og:title" content="Event Details — UniEvents">
+<meta property="og:description" content="Discover OAU campus events, register in seconds, and keep every ticket in one place.">
+<meta property="og:image" content="https://raw.githubusercontent.com/CalebPiusC/UniEvents/arena/01a07ba1-unievents/images/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Event Details — UniEvents">
+<meta name="twitter:description" content="Discover OAU campus events, register in seconds, and keep every ticket in one place.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/CalebPiusC/UniEvents/arena/01a07ba1-unievents/images/og.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 
@@ -26,6 +41,7 @@
   <div class="wrap nav-inner">
     <a href="index.html" class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</a>
     <div class="nav-links">
+      <a href="index.html">Home</a>
       <a href="browse.html">Browse Events</a>
       <a href="my-tickets.html">My Tickets</a>
       <a href="dashboard.html">For Organizers</a>
@@ -40,6 +56,7 @@
     <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
   </div>
   <div class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Home</a>
     <a href="browse.html">Browse Events</a>
     <a href="my-tickets.html">My Tickets</a>
     <a href="dashboard.html">For Organizers</a>
@@ -85,6 +102,23 @@
     <h3 id="expectHeading" style="display:none;">What to expect</h3>
     <ul id="expectList"></ul>
   </div>
+
+  <div class="reviews-block" id="reviewsBlock">
+    <h3>Reviews <span class="stars-row" id="reviewAvg"></span></h3>
+    <form id="reviewForm" class="review-form">
+      <p class="review-hint">Been? Leave a rating.</p>
+      <div class="star-pick" id="starPick" role="radiogroup" aria-label="Rating">
+        <button type="button" data-stars="1" aria-label="1 star"><i class="fa-regular fa-star"></i></button>
+        <button type="button" data-stars="2" aria-label="2 stars"><i class="fa-regular fa-star"></i></button>
+        <button type="button" data-stars="3" aria-label="3 stars"><i class="fa-regular fa-star"></i></button>
+        <button type="button" data-stars="4" aria-label="4 stars"><i class="fa-regular fa-star"></i></button>
+        <button type="button" data-stars="5" aria-label="5 stars"><i class="fa-regular fa-star"></i></button>
+      </div>
+      <textarea id="reviewText" class="email-input" rows="3" placeholder="What was it like? (optional)"></textarea>
+      <button type="submit" class="btn-coral" id="reviewSubmit" style="margin-top:10px;">Post review</button>
+    </form>
+    <div id="reviewsList"></div>
+  </div>
 </main>
 
 <p class="no-results" id="notFoundState" style="display:none; padding:150px 24px 60px; text-align:center;">
@@ -92,7 +126,7 @@
 </p>
 
 <div class="sticky-cta" id="stickyCta" style="display:none;">
-  <button class="heart-toggle" id="heartBtn"><i class="fa-regular fa-heart"></i></button>
+  <button class="heart-toggle" id="heartBtn" type="button" aria-label="Save event"><i class="fa-regular fa-heart"></i></button>
   <button class="btn-coral cta-wide" id="registerBtn">Get a Ticket</button>
 </div>
 
@@ -147,6 +181,7 @@
     <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
     <div class="foot-links">
       <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
       <a href="dashboard.html">For Organizers</a>
       <a href="about.html">About</a>
       <a href="contact.html">Contact</a>
@@ -159,7 +194,7 @@
 <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=5"></script>
 <script src="detail.js"></script>
 </body>
 </html>

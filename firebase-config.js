@@ -13,6 +13,9 @@
    Then deploy firestore.rules and firestore.indexes.json from this
    repo (see README.md). Do not leave the database in open test mode
    for a public demo.
+
+   Optional: Build -> Storage -> Get started, then deploy storage.rules
+   so organizers can upload cover photos.
    ========================================================= */
 
 const firebaseConfig = {
@@ -29,3 +32,4 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = (typeof firebase.storage === 'function') ? firebase.storage() : null;
