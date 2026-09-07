@@ -71,6 +71,9 @@ function renderEvent() {
   if (hero) {
     const oldCover = hero.querySelector('.cover-img');
     if (oldCover) oldCover.remove();
+    ['cover-academic', 'cover-social', 'cover-sports', 'cover-food'].forEach((c) => hero.classList.remove(c));
+    const cat = CATEGORY_COVERS[ev.category] ? ev.category : 'academic';
+    hero.classList.add('cover-' + cat);
     hero.insertAdjacentHTML('afterbegin', coverImgHTML(ev, ev.title));
     hero.style.backgroundImage = '';
   }

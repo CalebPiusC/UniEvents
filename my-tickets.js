@@ -11,7 +11,7 @@ const ticketsEmpty = document.getElementById('ticketsEmpty');
 function cardHTML(id, reg) {
   const statusLabel = reg.checkedIn ? 'Used' : 'Valid';
   return `
-    <a class="event-card" href="ticket.html?id=${encodeURIComponent(id)}&code=${encodeURIComponent(reg.ticketCode || '')}">
+    <a class="event-card" data-category="academic" href="ticket.html?id=${encodeURIComponent(id)}&code=${encodeURIComponent(reg.ticketCode || '')}">
       <div class="event-photo a">
         ${coverImgHTML({ category: 'academic' }, reg.eventTitle)}
         <i class="fa-solid fa-ticket"></i>

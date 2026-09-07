@@ -49,12 +49,22 @@ function isCoverSrc(value) {
   return raw.indexOf('images/') === 0 || raw.indexOf('/images/') === 0;
 }
 
+function resolveAsset(path) {
+  const rel = String(path || '').replace(/^\//, '');
+  try {
+    return new URL(rel, document.baseURI || window.location.href).href;
+  } catch (err) {
+    return rel;
+  }
+}
+
 function eventCoverUrl(ev) {
-  const fallback = categoryCover(ev && ev.category);
+  const fallback = resolveAsset(categoryCover(ev && ev.category));
   const raw = ev && ev.imageUrl ? String(ev.imageUrl).trim() : '';
   if (!raw) return fallback;
-  if (raw.indexOf('/images/') === 0) return raw.slice(1);
-  if (raw.indexOf('images/') === 0) return raw;
+  if (raw.indexOf('/images/') === 0 || raw.indexOf('images/') === 0) {
+    return resolveAsset(raw.replace(/^\//, ''));
+  }
   if (isSafeHttpUrl(raw)) {
     try {
       const parsed = new URL(raw);
@@ -69,7 +79,7 @@ function eventCoverUrl(ev) {
 
 function coverImgHTML(ev, alt) {
   const src = eventCoverUrl(ev).replace(/"/g, '');
-  const fallback = categoryCover(ev && ev.category).replace(/"/g, '');
+  const fallback = resolveAsset(categoryCover(ev && ev.category)).replace(/"/g, '');
   const safeAlt = escapeHtml(alt || (ev && ev.title) || 'Event cover');
   return `<img class="cover-img" src="${src}" alt="${safeAlt}" decoding="async" onerror="this.onerror=null;this.src='${fallback}'">`;
 }
