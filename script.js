@@ -38,16 +38,70 @@ const CATEGORY_COVERS = {
   food: 'images/food.jpg'
 };
 
+function categoryCover(cat) {
+  return CATEGORY_COVERS[cat] || CATEGORY_COVERS.academic;
+}
+
 function isCoverSrc(value) {
   if (!value) return false;
-  if (isSafeHttpUrl(value)) return true;
-  return String(value).indexOf('images/') === 0;
+  const raw = String(value).trim();
+  if (isSafeHttpUrl(raw)) return true;
+  return raw.indexOf('images/') === 0 || raw.indexOf('/images/') === 0;
 }
 
 function eventCoverUrl(ev) {
-  if (isCoverSrc(ev && ev.imageUrl)) return ev.imageUrl;
-  const cat = (ev && ev.category) || 'academic';
-  return CATEGORY_COVERS[cat] || CATEGORY_COVERS.academic;
+  const fallback = categoryCover(ev && ev.category);
+  const raw = ev && ev.imageUrl ? String(ev.imageUrl).trim() : '';
+  if (!raw) return fallback;
+  if (raw.indexOf('/images/') === 0) return raw.slice(1);
+  if (raw.indexOf('images/') === 0) return raw;
+  if (isSafeHttpUrl(raw)) {
+    try {
+      const parsed = new URL(raw);
+      if (parsed.protocol === 'http:') parsed.protocol = 'https:';
+      return parsed.href;
+    } catch (err) {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
+function coverImgHTML(ev, alt) {
+  const src = eventCoverUrl(ev).replace(/"/g, '');
+  const fallback = categoryCover(ev && ev.category).replace(/"/g, '');
+  const safeAlt = escapeHtml(alt || (ev && ev.title) || 'Event cover');
+  return `<img class="cover-img" src="${src}" alt="${safeAlt}" decoding="async" onerror="this.onerror=null;this.src='${fallback}'">`;
+}
+
+function formatNaira(n) {
+  return '₦' + (n || 0).toLocaleString('en-NG');
+}
+
+function eventCardHTML(id, ev, favorites) {
+  favorites = favorites || [];
+  const capacity = ev.capacity || 0;
+  const registered = ev.registeredCount || 0;
+  const full = capacity > 0 && registered >= capacity;
+  const past = isPastEvent(ev);
+  let priceLabel = (ev.price && ev.price > 0) ? formatNaira(ev.price) : 'Free';
+  if (full) priceLabel = 'Full';
+  if (past) priceLabel = 'Ended';
+  const saved = favorites.indexOf(id) !== -1;
+
+  return `
+    <a class="event-card${past ? ' past' : ''}" data-category="${escapeHtml(ev.category || 'academic')}" href="event-detail.html?id=${encodeURIComponent(id)}">
+      <div class="event-photo ${escapeHtml(ev.colorVariant || 'a')}">
+        ${coverImgHTML(ev, ev.title)}
+        <i class="fa-solid fa-${escapeHtml(ev.icon || 'calendar-star')}"></i>
+        <span class="date-badge">${escapeHtml(ev.dateBadgeMonth || '')}<br>${escapeHtml(ev.dateBadgeDay || '')}</span>
+        ${saved ? '<span class="saved-dot" title="Saved"><i class="fa-solid fa-heart"></i></span>' : ''}
+      </div>
+      <div class="event-info">
+        <div><h5>${escapeHtml(ev.title || 'Untitled event')}</h5><p>${escapeHtml(ev.venue || '')} · ${escapeHtml(ev.time || '')}</p></div>
+        <span class="price-pill">${escapeHtml(priceLabel)}</span>
+      </div>
+    </a>`;
 }
 
 function isPastEvent(ev) {
@@ -145,3 +199,24 @@ if (typeof auth !== 'undefined') {
     mLogout.onclick = logoutHandler;
   });
 }
+
+/* Home page: a few upcoming events with real cover photos */
+(function loadHomeEvents() {
+  const grid = document.getElementById('homeEventGrid');
+  if (!grid || typeof db === 'undefined') return;
+  const empty = document.getElementById('homeEventsEmpty');
+
+  db.collection('events').orderBy('createdAt', 'desc').limit(12).get()
+    .then((snap) => {
+      const events = snap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((ev) => ev.published !== false && !isPastEvent(ev))
+        .slice(0, 3);
+      if (!events.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      grid.innerHTML = events.map((ev) => eventCardHTML(ev.id, ev, [])).join('');
+    })
+    .catch((err) => console.error(err));
+})();

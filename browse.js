@@ -13,37 +13,8 @@ const searchInput = document.getElementById('searchInput');
 let allEvents = [];
 let favorites = [];
 
-function formatNaira(n) {
-  return '₦' + n.toLocaleString('en-NG');
-}
-
 function cardHTML(id, ev) {
-  const capacity = ev.capacity || 0;
-  const registered = ev.registeredCount || 0;
-  const full = capacity > 0 && registered >= capacity;
-  const past = isPastEvent(ev);
-  let priceLabel = (ev.price && ev.price > 0) ? formatNaira(ev.price) : 'Free';
-  if (full) priceLabel = 'Full';
-  if (past) priceLabel = 'Ended';
-
-  const cover = eventCoverUrl(ev).replace(/"/g, '');
-  const photoStyle = cover
-    ? `style="background-image:linear-gradient(rgba(27,20,17,.15),rgba(27,20,17,.55)),url('${cover}');background-size:cover;background-position:center;"`
-    : '';
-  const saved = favorites.indexOf(id) !== -1;
-
-  return `
-    <a class="event-card${past ? ' past' : ''}" data-category="${escapeHtml(ev.category || 'academic')}" href="event-detail.html?id=${encodeURIComponent(id)}">
-      <div class="event-photo ${escapeHtml(ev.colorVariant || 'a')}" ${photoStyle}>
-        <i class="fa-solid fa-${escapeHtml(ev.icon || 'calendar-star')}"></i>
-        <span class="date-badge">${escapeHtml(ev.dateBadgeMonth || '')}<br>${escapeHtml(ev.dateBadgeDay || '')}</span>
-        ${saved ? '<span class="saved-dot" title="Saved"><i class="fa-solid fa-heart"></i></span>' : ''}
-      </div>
-      <div class="event-info">
-        <div><h5>${escapeHtml(ev.title || 'Untitled event')}</h5><p>${escapeHtml(ev.venue || '')} · ${escapeHtml(ev.time || '')}</p></div>
-        <span class="price-pill">${escapeHtml(priceLabel)}</span>
-      </div>
-    </a>`;
+  return eventCardHTML(id, ev, favorites);
 }
 
 function render() {

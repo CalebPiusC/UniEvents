@@ -10,10 +10,10 @@ const ticketsEmpty = document.getElementById('ticketsEmpty');
 
 function cardHTML(id, reg) {
   const statusLabel = reg.checkedIn ? 'Used' : 'Valid';
-  const cover = eventCoverUrl({ category: 'academic', imageUrl: '' });
   return `
     <a class="event-card" href="ticket.html?id=${encodeURIComponent(id)}&code=${encodeURIComponent(reg.ticketCode || '')}">
-      <div class="event-photo a" style="background-image:linear-gradient(rgba(27,20,17,.2),rgba(27,20,17,.55)),url('${cover}');background-size:cover;background-position:center;">
+      <div class="event-photo a">
+        ${coverImgHTML({ category: 'academic' }, reg.eventTitle)}
         <i class="fa-solid fa-ticket"></i>
       </div>
       <div class="event-info">

@@ -99,6 +99,14 @@ function renderTicket(reg) {
 
   ticketCard.style.display = 'block';
 
+  if (reg.eventId) {
+    db.collection('events').doc(reg.eventId).get().then((doc) => {
+      const photo = document.getElementById('ticketPhoto');
+      if (!photo || !doc.exists) return;
+      photo.innerHTML = coverImgHTML(doc.data(), doc.data().title || reg.eventTitle);
+    }).catch((err) => console.error(err));
+  }
+
   const cancelBtn = document.getElementById('cancelTicketBtn');
   if (cancelBtn) {
     cancelBtn.style.display = reg.checkedIn ? 'none' : 'inline-block';
