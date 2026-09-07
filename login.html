@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
+  <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="#">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<div class="auth-page">
+
+  <div class="auth-display">
+    <div class="bg-anim" aria-hidden="true" style="position:absolute;">
+      <span class="dot d1"></span><span class="dot d6"></span>
+      <i class="fa-regular fa-bell symbol s1"></i>
+      <i class="fa-solid fa-ticket symbol s3"></i>
+      <i class="fa-regular fa-calendar symbol s2"></i>
+      <span class="bg-line l1"></span><span class="bg-line l2"></span>
+    </div>
+    <div class="auth-display-inner">
+      <div class="mini-brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+      <p class="tagline">There's always something <span class="accent">happening.</span></p>
+      <p>Discover university events, register in seconds, and keep every ticket in one place.</p>
+
+      <div class="ticket mini-ticket">
+        <div class="ticket-top">
+          <div><h4>OAU Tech &amp; Innovation Summit</h4><span>Oduduwa Hall · Sep 11</span></div>
+          <div class="stamp">VALID</div>
+        </div>
+        <div class="ticket-grid">
+          <div><label>TIME</label><span>4:00 PM</span></div>
+          <div><label>CODE</label><span>UE-24091</span></div>
+        </div>
+        <div class="ticket-perf"></div>
+        <div class="barcode"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-card">
+      <h2>Welcome back</h2>
+      <p>Log in to register for events and view your tickets.</p>
+
+      <form id="loginForm">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" class="auth-input" required>
+
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="auth-input" required>
+
+        <p class="field-error" id="loginError"></p>
+
+        <button type="submit" class="btn-coral auth-submit" id="loginSubmit">Log In</button>
+      </form>
+
+      <p class="auth-switch">Don't have an account? <a href="signup.html">Sign up</a></p>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="login.js"></script>
+</body>
+</html>

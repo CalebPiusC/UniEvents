@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan Tickets — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
+  <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
+      <a href="dashboard.html">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="my-tickets.html">My Tickets</a>
+    <a href="dashboard.html">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<div class="wrap scan-wrap">
+  <p id="scanAuthLoading" style="color:var(--dim); font-size:13px; padding-top:150px;">Checking access...</p>
+
+  <div id="scanNotAllowed" style="display:none; padding-top:150px; text-align:center;">
+    <p style="color:var(--dim); font-size:14px;">Only organizers and admins can scan tickets.</p>
+    <a href="dashboard.html" style="color:var(--coral); font-weight:700;">Back to Dashboard</a>
+  </div>
+
+  <div id="scanApp" style="display:none;">
+    <div class="dash-head" style="padding-top:150px;">
+      <div>
+        <h1>Scan Tickets</h1>
+        <p>Point the camera at a student's QR ticket to check them in.</p>
+      </div>
+      <button class="btn-coral" id="startBtn">Start Scanning</button>
+    </div>
+
+    <div id="reader" style="max-width:420px; border-radius:16px; overflow:hidden; margin-bottom:20px;"></div>
+
+    <div id="scanResult" style="display:none; max-width:420px;">
+      <div class="apply-card" id="resultCard">
+        <h3 id="resultTitle"></h3>
+        <p id="resultBody"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="dashboard.html">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="script.js"></script>
+<script src="scan.js"></script>
+</body>
+</html>

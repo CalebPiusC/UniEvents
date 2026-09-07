@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
+  <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
+      <a href="dashboard.html">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="my-tickets.html">My Tickets</a>
+    <a href="dashboard.html">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<div class="wrap dash-wrap">
+
+  <p id="dashLoading" style="color:var(--dim); font-size:13px;">Loading your dashboard...</p>
+
+  <!-- ===== STUDENT VIEW: apply to organize ===== -->
+  <div id="studentView" style="display:none;">
+    <div class="dash-head">
+      <div>
+        <span class="role-badge">STUDENT ACCOUNT</span>
+        <h1>Want to host an event?</h1>
+        <p>Apply below — an admin reviews requests before granting organizer access.</p>
+      </div>
+    </div>
+
+    <div id="applyForm" class="apply-card">
+      <h3>Apply to be an organizer</h3>
+      <p>Tell us a bit about what you'd like to host. Approved organizers get access to event creation tools right here on this page.</p>
+      <div class="form-field" style="margin-bottom:14px;">
+        <label for="applyDept">Department / society</label>
+        <input type="text" id="applyDept" placeholder="e.g. SEN Career Office">
+      </div>
+      <div class="form-field" style="margin-bottom:16px;">
+        <label for="applyReason">What will you organize?</label>
+        <textarea id="applyReason" placeholder="A short description of the kind of events you'd host"></textarea>
+      </div>
+      <p class="field-error" id="applyError"></p>
+      <button class="btn-coral" id="applySubmit" style="width:100%; padding:12px;">Submit Application</button>
+    </div>
+
+    <div id="pendingBanner" class="status-banner" style="display:none;">
+      <i class="fa-solid fa-hourglass-half"></i>
+      <div><h4>Application pending</h4><p>An admin is reviewing your request to become an organizer.</p></div>
+    </div>
+
+    <div id="rejectedBanner" class="status-banner rejected" style="display:none;">
+      <i class="fa-solid fa-circle-xmark"></i>
+      <div><h4>Application not approved</h4><p>Reach out to an admin if you'd like to discuss reapplying.</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ORGANIZER / ADMIN VIEW ===== -->
+  <div id="organizerView" style="display:none;">
+    <div class="dash-head">
+      <div>
+        <span class="role-badge" id="roleBadgeText">ORGANIZER</span>
+        <h1>Your events</h1>
+        <p>Create and manage the events you're hosting.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a href="scan.html" class="btn-ghost">Scan Tickets</a>
+        <button class="btn-coral" id="newEventBtn">+ New Event</button>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <div id="myEventsList"></div>
+      <p class="no-results" id="noEventsYet" style="display:none;">You haven't created any events yet.</p>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN-ONLY: pending organizer requests ===== -->
+  <div id="adminSection" class="dash-section" style="display:none;">
+    <div class="dash-section-head"><h3>Pending organizer requests</h3></div>
+    <div id="pendingRequestsList"></div>
+    <p class="no-results" id="noPendingRequests" style="display:none;">No pending requests right now.</p>
+  </div>
+
+</div>
+
+<!-- Create / Edit Event modal -->
+<div class="modal-overlay" id="eventModalOverlay">
+  <div class="modal-card checkout-card" style="max-width:520px; text-align:left;">
+    <h3 id="eventModalTitle" style="text-align:left; margin-bottom:18px;">Create Event</h3>
+    <div class="form-grid">
+      <div class="form-field full"><label>Event title</label><input type="text" id="fTitle"></div>
+      <div class="form-field"><label>Category</label>
+        <select id="fCategory">
+          <option value="academic">Academic</option>
+          <option value="social">Social</option>
+          <option value="sports">Sports</option>
+          <option value="food">Food</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Date</label><input type="date" id="fDate"></div>
+      <div class="form-field"><label>Time (display)</label><input type="text" id="fTime" placeholder="4:00 – 7:00 PM"></div>
+      <div class="form-field"><label>Venue</label><input type="text" id="fVenue"></div>
+      <div class="form-field"><label>Host / department</label><input type="text" id="fHost"></div>
+      <div class="form-field"><label>Price (₦, 0 = free)</label><input type="number" id="fPrice" value="0" min="0"></div>
+      <div class="form-field"><label>Capacity</label><input type="number" id="fCapacity" value="50" min="1"></div>
+      <div class="form-field full"><label>Description</label><textarea id="fDescription"></textarea></div>
+      <div class="form-field full"><label>What to expect (one per line)</label><textarea id="fExpect"></textarea></div>
+    </div>
+    <p class="field-error" id="eventFormError" style="margin-top:12px;"></p>
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <button class="btn-coral" id="eventFormSubmit" style="flex:1; padding:12px;">Save Event</button>
+      <button class="checkout-cancel" id="eventFormCancel" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Registrants modal -->
+<div class="modal-overlay" id="registrantsOverlay">
+  <div class="modal-card checkout-card" style="max-width:440px; text-align:left;">
+    <h3 id="registrantsTitle" style="text-align:left;">Registrants</h3>
+    <p class="stat-pill" id="totalCollected" style="margin-bottom:16px; display:inline-block;"></p>
+    <div id="registrantsList"></div>
+    <p class="no-results" id="noRegistrants" style="display:none;">No one has registered yet.</p>
+    <button class="checkout-cancel" id="registrantsClose" style="width:100%; margin-top:16px;">Close</button>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="dashboard.html">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

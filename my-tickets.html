@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Tickets — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="dot d4"></span>
+  <span class="dot d5"></span><span class="dot d6"></span><span class="dot d7"></span><span class="dot d8"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
+      <a href="#">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="my-tickets.html">My Tickets</a>
+    <a href="#">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<header class="wrap browse-hero">
+  <h1>My Tickets</h1>
+  <p>Every event you've registered for, in one place.</p>
+</header>
+
+<section class="wrap">
+  <div class="event-grid" id="ticketsGrid"></div>
+  <p class="no-results" id="ticketsLoading" style="display:block;">Loading your tickets...</p>
+  <p class="no-results" id="ticketsEmpty" style="display:none;">
+    You haven't registered for anything yet. <a href="browse.html" style="color:var(--coral); font-weight:700;">Browse events</a>
+  </p>
+</section>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="my-tickets.js"></script>
+</body>
+</html>

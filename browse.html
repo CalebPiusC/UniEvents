@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Events — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span>
+  <span class="dot d3"></span>
+  <span class="dot d6"></span>
+  <i class="fa-regular fa-bell symbol s1"></i>
+  <i class="fa-regular fa-calendar symbol s2"></i>
+  <i class="fa-solid fa-ticket symbol s3"></i>
+  <i class="fa-regular fa-comment-dots symbol s4"></i>
+  <i class="fa-solid fa-location-dot symbol s5"></i>
+  <i class="fa-regular fa-star symbol s6"></i>
+  <span class="bg-line l1"></span>
+  <span class="bg-line l2"></span>
+  <span class="bg-line l3"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
+      <a href="#">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="my-tickets.html">My Tickets</a>
+    <a href="#">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<header class="wrap browse-hero">
+  <h1>Browse Events</h1>
+  <p>Search across every department, hall, and society — filter by category to find what's actually worth your evening.</p>
+
+  <div class="search-bar">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="searchInput" placeholder="Search events, venues, or organizers...">
+  </div>
+
+  <div class="filter-chips" id="filterChips">
+    <button class="chip active" data-filter="all">All</button>
+    <button class="chip" data-filter="academic">Academic</button>
+    <button class="chip" data-filter="social">Social</button>
+    <button class="chip" data-filter="sports">Sports</button>
+    <button class="chip" data-filter="food">Food</button>
+  </div>
+</header>
+
+<section class="wrap">
+  <div class="event-grid" id="eventGrid"></div>
+  <p class="no-results" id="loadingState" style="display:block;">Loading events...</p>
+  <p class="no-results" id="emptyState" style="display:none;">No events yet — check back soon, or if you're an approved organizer, create the first one.</p>
+  <p class="no-results" id="noResults" style="display:none;">No events match your search — try a different keyword or filter.</p>
+</section>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+<script src="browse.js"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Details — UniEvents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span><span class="dot d3"></span><span class="dot d6"></span>
+  <i class="fa-regular fa-bell symbol s1"></i>
+  <i class="fa-regular fa-calendar symbol s2"></i>
+  <i class="fa-solid fa-ticket symbol s3"></i>
+  <i class="fa-regular fa-comment-dots symbol s4"></i>
+  <i class="fa-solid fa-location-dot symbol s5"></i>
+  <i class="fa-regular fa-star symbol s6"></i>
+  <span class="bg-line l1"></span><span class="bg-line l2"></span><span class="bg-line l3"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="my-tickets.html">My Tickets</a>
+      <a href="#">For Organizers</a>
+      <a href="index.html#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="my-tickets.html">My Tickets</a>
+    <a href="#">For Organizers</a>
+    <a href="index.html#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<div class="wrap detail-hero-wrap">
+  <div class="detail-hero">
+    <i class="fa-solid fa-calendar-star bgicon" id="heroIcon"></i>
+    <div class="detail-hero-top">
+      <button class="icon-btn" onclick="window.location.href='browse.html'"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="icon-btn"><i class="fa-solid fa-share-nodes"></i></button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap detail-main" id="detailMain" style="display:none;">
+  <div class="detail-title-row">
+    <h1 id="detailTitle"></h1>
+    <span class="price-tag-lg" id="priceTagDisplay"></span>
+  </div>
+
+  <div class="detail-meta-grid">
+    <div><label>DATE</label><span id="metaDate"></span></div>
+    <div><label>TIME</label><span id="metaTime"></span></div>
+    <div><label>VENUE</label><span id="metaVenue"></span></div>
+    <div><label>HOST</label><span id="metaHost"></span></div>
+  </div>
+
+  <div class="capacity-block">
+    <div class="cap-track"><div class="cap-fill" id="capFill" data-target="0" style="width:0%"></div></div>
+    <p class="cap-label"><span id="capText">0</span>/<span id="capTotal">0</span> registered</p>
+  </div>
+
+  <div class="detail-about">
+    <h3>About this event</h3>
+    <p id="detailDescription"></p>
+    <h3 id="expectHeading" style="display:none;">What to expect</h3>
+    <ul id="expectList"></ul>
+  </div>
+</main>
+
+<p class="no-results" id="notFoundState" style="display:none; padding:150px 24px 60px; text-align:center;">
+  Event not found — it may have been removed. <a href="browse.html" style="color:var(--coral); font-weight:700;">Back to Browse Events</a>
+</p>
+
+<div class="sticky-cta" id="stickyCta" style="display:none;">
+  <button class="heart-toggle" id="heartBtn"><i class="fa-regular fa-heart"></i></button>
+  <button class="btn-coral cta-wide" id="registerBtn">Get a Ticket</button>
+</div>
+
+<div class="modal-overlay" id="checkoutOverlay">
+  <div class="modal-card checkout-card">
+    <h3>Confirm your order</h3>
+
+    <div class="order-row">
+      <div>
+        <div class="oname" id="orderEventName"></div>
+        <div class="odate" id="orderEventMeta"></div>
+      </div>
+    </div>
+
+    <div class="qty-row">
+      <span>Tickets</span>
+      <div class="qty-controls">
+        <button class="qty-btn" id="qtyMinus" type="button">−</button>
+        <span class="qty-value" id="qtyValue">1</span>
+        <button class="qty-btn" id="qtyPlus" type="button">+</button>
+      </div>
+    </div>
+
+    <div class="price-breakdown">
+      <div class="row"><span id="unitPriceLabel"></span><span id="unitPriceValue"></span></div>
+      <div class="row total"><span>Total</span><span id="totalPriceValue"></span></div>
+    </div>
+
+    <input type="email" class="email-input" id="checkoutEmail" placeholder="Email for your receipt & ticket">
+    <p class="field-error" id="emailError">Please enter a valid email address.</p>
+
+    <button class="btn-coral pay-btn" id="payBtn">Pay with Paystack</button>
+    <button class="checkout-cancel" id="checkoutCancel">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card">
+    <i class="fa-solid fa-circle-check modal-icon"></i>
+    <h3>You're registered!</h3>
+    <p id="successMessage"></p>
+    <p style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--dim); margin-top:-12px; margin-bottom:20px;" id="refDisplay"></p>
+    <div class="ticket-actions">
+      <a href="ticket.html" id="viewTicketLink" class="btn-coral">View My Ticket</a>
+      <button class="checkout-cancel" id="modalClose" style="flex:1;">Close</button>
+    </div>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="script.js"></script>
+<script src="detail.js"></script>
+</body>
+</html>

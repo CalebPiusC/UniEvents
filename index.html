@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniEvents — Everything happening on campus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ambient background animation, purely decorative, sits behind everything -->
+<div class="bg-anim" aria-hidden="true">
+  <span class="dot d1"></span>
+  <span class="dot d3"></span>
+  <span class="dot d6"></span>
+  <i class="fa-regular fa-bell symbol s1"></i>
+  <i class="fa-regular fa-calendar symbol s2"></i>
+  <i class="fa-solid fa-ticket symbol s3"></i>
+  <i class="fa-regular fa-comment-dots symbol s4"></i>
+  <i class="fa-solid fa-location-dot symbol s5"></i>
+  <i class="fa-regular fa-star symbol s6"></i>
+  <span class="bg-line l1"></span>
+  <span class="bg-line l2"></span>
+  <span class="bg-line l3"></span>
+</div>
+
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><i class="fa-solid fa-ticket"></i> UniEvents</div>
+    <div class="nav-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="#">About</a>
+    </div>
+    <div class="nav-actions">
+      <a href="login.html" class="login" id="navLoginLink">Log in</a>
+      <a href="signup.html" class="btn-coral" id="navSignupLink">Sign Up</a>
+      <span class="login" id="navUserName" style="display:none;"></span>
+      <button class="btn-ghost" id="navLogoutBtn" style="display:none;">Log out</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="browse.html">Browse Events</a>
+    <a href="#">For Organizers</a>
+    <a href="#">About</a>
+    <a href="login.html" class="login" id="mobileLoginLink">Log in</a>
+    <a href="signup.html" class="btn-coral" id="mobileSignupLink" style="width:fit-content;">Sign Up</a>
+    <span class="login" id="mobileUserName" style="display:none;"></span>
+    <button class="btn-ghost" id="mobileLogoutBtn" style="display:none; width:fit-content;">Log out</button>
+  </div>
+</nav>
+
+<header class="wrap hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="eyebrow-dot"></span>OAU EVENT COMMUNITY</p>
+    <h1>There's always something <span class="accent">happening.</span></h1>
+    <p class="sub">Discover university events, register in seconds, and keep every ticket in one place.</p>
+    <div class="hero-ctas">
+      <a href="browse.html" class="btn-coral">Browse Events</a>
+      <a href="#" class="btn-ghost">Apply as an Organizer</a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="float-chip chip1"><i class="fa-solid fa-circle-check"></i> Registered</div>
+    <div class="float-chip chip2"><i class="fa-solid fa-circle-check"></i> Checked in</div>
+    <div class="ticket">
+      <div class="ticket-top">
+        <div><h4>Careers &amp; Tech Fair</h4><span>Oduduwa Hall · Sep 12</span></div>
+        <div class="stamp">VALID</div>
+      </div>
+      <div class="ticket-grid">
+        <div><label>TIME</label><span>4:00 PM</span></div>
+        <div><label>ATTENDEE</label><span>Guest Attendee</span></div>
+      </div>
+      <div class="ticket-perf"></div>
+      <div class="qr-box">
+        <div class="scan-line"></div>
+        <svg width="84" height="84" viewBox="0 0 29 29">
+          <rect width="29" height="29" fill="#fff"/>
+          <g fill="#221c17">
+            <rect x="0" y="0" width="7" height="7"/><rect x="1.5" y="1.5" width="4" height="4" fill="#fff"/><rect x="2.7" y="2.7" width="1.6" height="1.6" fill="#221c17"/>
+            <rect x="22" y="0" width="7" height="7"/><rect x="23.5" y="1.5" width="4" height="4" fill="#fff"/><rect x="24.7" y="2.7" width="1.6" height="1.6" fill="#221c17"/>
+            <rect x="0" y="22" width="7" height="7"/><rect x="1.5" y="23.5" width="4" height="4" fill="#fff"/><rect x="2.7" y="24.7" width="1.6" height="1.6" fill="#221c17"/>
+            <rect x="9" y="1" width="1.6" height="1.6"/><rect x="12" y="1" width="1.6" height="1.6"/><rect x="15" y="2" width="1.6" height="1.6"/>
+            <rect x="10" y="4" width="1.6" height="1.6"/><rect x="13" y="5" width="1.6" height="1.6"/><rect x="17" y="4" width="1.6" height="1.6"/>
+            <rect x="9" y="9" width="1.6" height="1.6"/><rect x="12" y="9" width="1.6" height="1.6"/><rect x="15" y="9" width="1.6" height="1.6"/><rect x="18" y="9" width="1.6" height="1.6"/><rect x="21" y="9" width="1.6" height="1.6"/>
+            <rect x="9" y="12" width="1.6" height="1.6"/><rect x="11" y="12" width="1.6" height="1.6"/><rect x="14" y="12" width="1.6" height="1.6"/><rect x="17" y="12" width="1.6" height="1.6"/><rect x="20" y="12" width="1.6" height="1.6"/>
+            <rect x="9" y="15" width="1.6" height="1.6"/><rect x="13" y="15" width="1.6" height="1.6"/><rect x="16" y="15" width="1.6" height="1.6"/><rect x="19" y="15" width="1.6" height="1.6"/><rect x="22" y="15" width="1.6" height="1.6"/>
+            <rect x="9" y="18" width="1.6" height="1.6"/><rect x="12" y="18" width="1.6" height="1.6"/><rect x="15" y="18" width="1.6" height="1.6"/><rect x="18" y="18" width="1.6" height="1.6"/>
+            <rect x="10" y="21" width="1.6" height="1.6"/><rect x="14" y="21" width="1.6" height="1.6"/><rect x="17" y="21" width="1.6" height="1.6"/><rect x="20" y="21" width="1.6" height="1.6"/>
+            <rect x="9" y="24" width="1.6" height="1.6"/><rect x="12" y="24" width="1.6" height="1.6"/><rect x="16" y="24" width="1.6" height="1.6"/><rect x="19" y="24" width="1.6" height="1.6"/><rect x="22" y="24" width="1.6" height="1.6"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap stats">
+  <div><strong>20+</strong><span>event categories</span></div>
+  <div><strong>1</strong><span>account for every event</span></div>
+  <div><strong>&lt;1s</strong><span>QR check-in at the door</span></div>
+</div>
+
+<section class="wrap features">
+  <h2>Built around how students actually find out about events.</h2>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h4>Browse &amp; filter</h4>
+      <p>Search by category, department, or date — no more relying on WhatsApp forwards.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i class="fa-solid fa-bolt"></i></div>
+      <h4>One-tap registration</h4>
+      <p>Register in seconds and see live capacity before a hall fills up.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i class="fa-solid fa-qrcode"></i></div>
+      <h4>QR ticket &amp; check-in</h4>
+      <p>Every registration becomes a scannable ticket organizers verify at the door.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><i class="fa-solid fa-user-check"></i></div>
+      <h4>Apply to organize</h4>
+      <p>Any student can apply to host — approved organizers get their own dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="cta-band">
+    <div>
+      <h3>See what's happening on campus this week.</h3>
+      <p>No downloads, no signup wall to browse — create an account only when you're ready to register.</p>
+    </div>
+    <a href="browse.html" class="btn-coral">Browse Events</a>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div class="foot-inner">
+    <p>© 2026 UniEvents · SEN106/SEN216 Group 5</p>
+    <div class="foot-links">
+      <a href="browse.html">Browse Events</a>
+      <a href="#">For Organizers</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
