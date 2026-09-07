@@ -8,7 +8,11 @@
 
    Also make sure, in the Firebase console, you've enabled:
    - Build -> Authentication -> Sign-in method -> Email/Password
-   - Build -> Firestore Database -> Create database (test mode)
+   - Build -> Firestore Database -> Create database
+
+   Then deploy firestore.rules and firestore.indexes.json from this
+   repo (see README.md). Do not leave the database in open test mode
+   for a public demo.
    ========================================================= */
 
 const firebaseConfig = {

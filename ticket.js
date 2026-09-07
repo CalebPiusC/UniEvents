@@ -24,24 +24,18 @@ function loadTicket() {
     return;
   }
 
-  db.collection('registrations').where('ticketCode', '==', ticketCodeParam).limit(1).get()
+  db.collection('registrations')
+    .where('userId', '==', auth.currentUser.uid)
+    .where('ticketCode', '==', ticketCodeParam)
+    .limit(1)
+    .get()
     .then((snapshot) => {
       ticketLoading.style.display = 'none';
       if (snapshot.empty) {
         ticketNotFound.style.display = 'block';
         return;
       }
-      const reg = snapshot.docs[0].data();
-
-      // Only the person who owns this ticket should be able to view it.
-      // (Proper enforcement still needs real Firestore security rules —
-      // this is just the client-side check.)
-      if (reg.userId !== auth.currentUser.uid) {
-        ticketNotFound.style.display = 'block';
-        return;
-      }
-
-      renderTicket(reg);
+      renderTicket(snapshot.docs[0].data());
     })
     .catch((err) => {
       console.error(err);

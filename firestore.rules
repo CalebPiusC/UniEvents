@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc().role == 'admin';
+    }
+
+    function isOrganizerOrAdmin() {
+      return isSignedIn() && userDoc().role in ['organizer', 'admin'];
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.role == 'student';
+      // Users may edit their own profile but cannot change their role.
+      allow update: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isOrganizerOrAdmin()
+                    && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin()
+                    || (isOrganizerOrAdmin() && resource.data.createdBy == request.auth.uid)
+                    || (isSignedIn()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registeredCount']));
+      allow delete: if isAdmin()
+                    || (isOrganizerOrAdmin() && resource.data.createdBy == request.auth.uid);
+    }
+
+    match /registrations/{regId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isOrganizerOrAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isOrganizerOrAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['checkedIn', 'checkedInAt']);
+      allow delete: if false;
+    }
+
+    match /organizerRequests/{reqId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+  }
+}
