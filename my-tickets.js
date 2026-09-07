@@ -13,7 +13,6 @@ function cardHTML(id, reg) {
   return `
     <a class="event-card" data-category="academic" href="ticket.html?id=${encodeURIComponent(id)}&code=${encodeURIComponent(reg.ticketCode || '')}">
       <div class="event-photo a">
-        ${coverImgHTML({ category: 'academic' }, reg.eventTitle)}
         <i class="fa-solid fa-ticket"></i>
       </div>
       <div class="event-info">

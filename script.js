@@ -102,7 +102,6 @@ function eventCardHTML(id, ev, favorites) {
   return `
     <a class="event-card${past ? ' past' : ''}" data-category="${escapeHtml(ev.category || 'academic')}" href="event-detail.html?id=${encodeURIComponent(id)}">
       <div class="event-photo ${escapeHtml(ev.colorVariant || 'a')}">
-        ${coverImgHTML(ev, ev.title)}
         <i class="fa-solid fa-${escapeHtml(ev.icon || 'calendar-star')}"></i>
         <span class="date-badge">${escapeHtml(ev.dateBadgeMonth || '')}<br>${escapeHtml(ev.dateBadgeDay || '')}</span>
         ${saved ? '<span class="saved-dot" title="Saved"><i class="fa-solid fa-heart"></i></span>' : ''}
