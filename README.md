@@ -72,6 +72,8 @@ To switch accounts later, replace `PAYSTACK_PUBLIC_KEY` in `detail.js`.
 
 Without step 6, login/signup will fail on the live site.
 
+**WhatsApp preview:** after the site is live, paste the Netlify URL into [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) → **Scrape Again**. WhatsApp caches the old empty preview until that (or until you wait a while and send the link in a **new** chat). To use your live image instead of GitHub, set `og:image` in the HTML to `https://YOUR-SITE.netlify.app/images/og.jpg`.
+
 **Firebase Hosting (optional)**
 
 ```bash
