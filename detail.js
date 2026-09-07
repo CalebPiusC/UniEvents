@@ -364,7 +364,7 @@ function completeRegistration(paymentRef) {
   }).then(() => {
     successMessage.textContent = 'Your ticket for ' + currentEvent.title + ' has been added to My Tickets, with a QR code ready to scan at the door.';
     refDisplay.textContent = 'Ticket code: ' + ticketCode;
-    viewTicketLink.href = 'ticket.html?code=' + ticketCode;
+    viewTicketLink.href = 'ticket.html?code=' + encodeURIComponent(ticketCode);
     modalOverlay.classList.add('open');
   }).catch((err) => {
     alert(err.message || 'Something went wrong completing your registration.');

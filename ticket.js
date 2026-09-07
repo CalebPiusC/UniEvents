@@ -1,10 +1,11 @@
 /* =========================================================
-   Ticket page — loads the real registration by ?code= from
-   Firestore and renders a QR code that encodes the ticket code.
+   Ticket page — loads the registration by ?id= (preferred)
+   or ?code= from Firestore and renders a QR code.
    Loaded only on ticket.html.
    ========================================================= */
 
 const ticketParams = new URLSearchParams(window.location.search);
+const ticketIdParam = ticketParams.get('id');
 const ticketCodeParam = ticketParams.get('code');
 
 const ticketLoading = document.getElementById('ticketLoading');
@@ -14,38 +15,60 @@ const ticketCard = document.getElementById('ticketCard');
 let currentReg = null;
 let currentRegRef = null;
 
-function loadTicket() {
-  if (!auth.currentUser) {
+function showNotFound() {
+  ticketLoading.style.display = 'none';
+  ticketNotFound.style.display = 'block';
+  ticketCard.style.display = 'none';
+}
+
+function applyRegistration(doc) {
+  currentRegRef = doc.ref;
+  currentReg = doc.data();
+  ticketLoading.style.display = 'none';
+  ticketNotFound.style.display = 'none';
+  renderTicket(currentReg);
+}
+
+function loadTicket(user) {
+  if (!user) {
     sessionStorage.setItem('redirectAfterLogin', window.location.href);
     window.location.href = 'login.html';
     return;
   }
-  if (!ticketCodeParam) {
-    ticketLoading.style.display = 'none';
-    ticketNotFound.style.display = 'block';
+  if (!ticketIdParam && !ticketCodeParam) {
+    showNotFound();
     return;
   }
 
-  db.collection('registrations')
-    .where('userId', '==', auth.currentUser.uid)
-    .where('ticketCode', '==', ticketCodeParam)
-    .limit(1)
-    .get()
-    .then((snapshot) => {
-      ticketLoading.style.display = 'none';
-      if (snapshot.empty) {
-        ticketNotFound.style.display = 'block';
-        return;
-      }
-      currentRegRef = snapshot.docs[0].ref;
-      currentReg = snapshot.docs[0].data();
-      renderTicket(currentReg);
-    })
-    .catch((err) => {
-      console.error(err);
-      ticketLoading.style.display = 'none';
-      ticketNotFound.style.display = 'block';
-    });
+  const byId = ticketIdParam
+    ? db.collection('registrations').doc(ticketIdParam).get().then((doc) => {
+        if (doc.exists && doc.data().userId === user.uid) return doc;
+        return null;
+      })
+    : Promise.resolve(null);
+
+  byId.then((doc) => {
+    if (doc) {
+      applyRegistration(doc);
+      return null;
+    }
+    if (!ticketCodeParam) {
+      showNotFound();
+      return null;
+    }
+    return db.collection('registrations').where('userId', '==', user.uid).get();
+  }).then((snapshot) => {
+    if (!snapshot) return;
+    const match = snapshot.docs.find((d) => d.data().ticketCode === ticketCodeParam);
+    if (!match) {
+      showNotFound();
+      return;
+    }
+    applyRegistration(match);
+  }).catch((err) => {
+    console.error(err);
+    showNotFound();
+  });
 }
 
 function renderTicket(reg) {
@@ -67,10 +90,12 @@ function renderTicket(reg) {
     stamp.style.borderColor = 'var(--dim)';
   }
 
-  const qr = qrcode(0, 'M');
-  qr.addData(reg.ticketCode || '');
-  qr.make();
-  document.getElementById('qrCodeWrap').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+  if (typeof qrcode === 'function') {
+    const qr = qrcode(0, 'M');
+    qr.addData(reg.ticketCode || '');
+    qr.make();
+    document.getElementById('qrCodeWrap').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+  }
 
   ticketCard.style.display = 'block';
 
@@ -80,7 +105,7 @@ function renderTicket(reg) {
   }
 }
 
-auth.onAuthStateChanged(() => loadTicket());
+auth.onAuthStateChanged((user) => loadTicket(user));
 
 const imageBtn = document.getElementById('imageBtn');
 const qrBtn = document.getElementById('qrBtn');
