@@ -88,6 +88,13 @@ if (burger && mobileMenu) {
     burger.innerHTML = mobileMenu.classList.contains('open')
       ? '<i class="fa-solid fa-xmark"></i>'
       : '<i class="fa-solid fa-bars"></i>';
+    burger.setAttribute('aria-expanded', mobileMenu.classList.contains('open') ? 'true' : 'false');
+  });
+  mobileMenu.querySelectorAll('a, button').forEach((el) => {
+    el.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      burger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    });
   });
 }
 
