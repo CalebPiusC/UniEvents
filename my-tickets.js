@@ -41,7 +41,11 @@ function loadMyTickets() {
     })
     .catch((err) => {
       console.error(err);
-      ticketsLoading.textContent = 'Could not load your tickets — check your connection and try again.';
+      if (err.code === 'failed-precondition') {
+        ticketsLoading.textContent = 'Database index still building — check the browser console for a link, then refresh in about a minute.';
+      } else {
+        ticketsLoading.textContent = 'Could not load your tickets — check your connection and try again.';
+      }
     });
 }
 

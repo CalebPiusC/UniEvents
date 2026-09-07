@@ -3,7 +3,7 @@
    Loaded only on event-detail.html.
    ========================================================= */
 
-const PAYSTACK_PUBLIC_KEY = 'pk_test_PASTE_YOUR_OWN_TEST_KEY_HERE';
+const PAYSTACK_PUBLIC_KEY = 'pk_test_5bfe5d9c696924eb223b4a5eac855ca5272e79e3';
 
 const params = new URLSearchParams(window.location.search);
 const eventId = params.get('id');
@@ -108,7 +108,7 @@ if (shareBtn) {
       url: shareUrl
     };
     if (navigator.share) {
-      navigator.share(shareData).catch(() => {});
+      navigator.share(shareData).catch(() => { });
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
         showToast('Link copied to clipboard!');
@@ -202,7 +202,7 @@ if (payBtn) {
         checkoutOverlay.classList.remove('open');
         completeRegistration(response.reference);
       },
-      onClose: function () {}
+      onClose: function () { }
     });
     handler.openIframe();
   });
